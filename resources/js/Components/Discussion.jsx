@@ -81,35 +81,58 @@ const Discussion = () => {
     'Finance Club',
   ];
   
-    const RecommendedGroups = () => {
-      return (
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Recommended Groups for You</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {groups.map((group, index) => {
-              const IconComponent = group.icon;
-              return (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <IconComponent className="h-5 w-5 text-gray-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{group.name}</h3>
-                      <p className="text-sm text-gray-600">{group.members}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">{group.description}</p>
-                  <button className="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    Join Group
-                  </button>
+const RecommendedGroups = () => {
+  return (
+    <div className="bg-transparent rounded-xl shadow-sm border border-gray-100 mb-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2 sm:mb-0">
+          Recommended Groups for You
+        </h2>
+        <button className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors hidden sm:block">
+          View All Groups
+        </button>
+      </div>
+
+      {/* Groups Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {groups.map((group, index) => {
+          const IconComponent = group.icon;
+          return (
+            <div 
+              key={index} 
+              className="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-gray-300 bg-white group"
+            >
+              {/* Group Header */}
+              <div className="flex items-start space-x-4 mb-4">
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-gray-900 truncate text-lg">{group.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1">{group.members}</p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    };
+              </div>
+
+              {/* Description */}
+              <p className="text-gray-600 text-sm leading-relaxed mb-5 line-clamp-2">
+                {group.description}
+              </p>
+
+              {/* Action Button */}
+              <button className="w-full bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 transition-all duration-200 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Join Group
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile View All Button */}
+      <button className="w-full sm:hidden mt-6 border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+        View All Groups
+      </button>
+    </div>
+  );
+};
   return (
       <div className="pt-16 pb-6">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

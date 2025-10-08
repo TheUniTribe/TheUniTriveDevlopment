@@ -21,7 +21,7 @@ Route::get('/home', function () {
 
 Route::post('/register', [RegisterController::class, 'registration'])->name('register');;
 Route::post('/login', [LoginController::class, 'login'])->name('login');;
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/login/{provider}', [SocialAuthController::class, 'redirectToProvider'])
     ->name('social.login');
