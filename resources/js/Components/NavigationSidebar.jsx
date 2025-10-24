@@ -12,11 +12,8 @@ const navItems = [
 
 export const NavigationSidebar = () => {
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-border bg-card p-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-primary">Quora</h1>
-      </div>
-      
+    <aside className="fixed left-0 top-10 h-screen w-64 border-r border-border bg-card p-4">
+    
       <nav className="space-y-1">
         {navItems.map((item) => (
           <button

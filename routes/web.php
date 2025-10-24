@@ -5,19 +5,19 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\RolePermissionController;
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/home');
+    }
     return Inertia::render('Welcome');
 });
 
-Route::get('/home', function () {
-    return Inertia::render('Home', [
-        'content' => session('content', 'dashboard') // Default to 'home' if no content in session
-    ]);
-})->name('home');
+
 
 Route::post('/register', [RegisterController::class, 'registration'])->name('register');;
 Route::post('/login', [LoginController::class, 'login'])->name('login');;
@@ -35,7 +35,12 @@ Route::get('/discussionforum', function () {
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/home', function () {
+    return Inertia::render('Home', [
+        'content' => session('content', 'dashboard') // Default to 'home' if no content in session
+    ]);
+})->name('home');
+    Route::get('/profile/{user}', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

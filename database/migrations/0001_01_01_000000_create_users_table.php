@@ -6,59 +6,44 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->text('bio')->nullable();
-            $table->date('birth_date')->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->integer('country_id')->nullable();
-            $table->integer('region_id')->nullable();
-            $table->integer('city_id')->nullable();
-            $table->integer('pincode_id')->nullable();
-            $table->string('website')->nullable();
-            $table->enum('gender', ['male', 'female', 'non-binary', 'other', 'prefer-not'])->nullable();
-            $table->string('profile_image')->nullable();
-            $table->string('twitter')->nullable();
-            $table->string('facebook')->nullable();
-            $table->string('linkedin')->nullable();
-            $table->string('instagram')->nullable();
-            $table->string('github')->nullable();
+
+            // Profile basics
+            $table->enum('gender', ['male', 'female', 'prefer_not_to_say'])->nullable();
+            $table->string('designation')->nullable();        // e.g., "Full-Stack Developer"
+            $table->text('bio')->nullable();               // Short bio
+            $table->string('website_url')->nullable();
+            $table->string('location')->nullable();        // e.g., "Berlin, Germany"
+            $table->date('birthdate')->nullable();
+            $table->timestamp('last_seen')->nullable();
+            // Media
+            $table->string('profile_photo', 2048)->nullable();
+
+            // Cached stats (updated via events/observers)
+            $table->unsignedBigInteger('followers_count')->default(0);
+            $table->unsignedBigInteger('following_count')->default(0);
+            $table->unsignedBigInteger('posts_count')->default(0);
+
+            // Security
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->date('is_banned')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
     }
 };

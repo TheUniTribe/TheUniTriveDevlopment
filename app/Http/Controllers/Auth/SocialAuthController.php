@@ -33,15 +33,25 @@ class SocialAuthController extends Controller
         try {
             $socialUser = Socialite::driver($provider)->user();
         } catch (\Exception $e) {
-            return redirect('/login')->withErrors(['msg' => 'Unable to login using ' . $provider . '. Please try again.']);
+            return redirect('')->withErrors(['msg' => 'Unable to login using ' . $provider . '. Please try again.']);
         }
 
         // Find or create user
         $user = User::where('email', $socialUser->getEmail())->first();
 
         if (!$user) {
+            // Generate a unique username
+            $baseUsername = Str::slug($socialUser->getName() ?? $socialUser->getNickname() ?? 'user');
+            $username = $baseUsername;
+            $counter = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . $counter;
+                $counter++;
+            }
+
             $user = User::create([
                 'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
+                'username' => $username,
                 'email' => $socialUser->getEmail(),
                 'password' => bcrypt(Str::random(16)), // random password
                 'provider' => $provider,
@@ -56,6 +66,17 @@ class SocialAuthController extends Controller
                     'provider_id' => $socialUser->getId(),
                     'avatar' => $socialUser->getAvatar(),
                 ]);
+            }
+            // If username is missing, generate one
+            if (!$user->username) {
+                $baseUsername = Str::slug($user->name ?? 'user');
+                $username = $baseUsername;
+                $counter = 1;
+                while (User::where('username', $username)->where('id', '!=', $user->id)->exists()) {
+                    $username = $baseUsername . $counter;
+                    $counter++;
+                }
+                $user->update(['username' => $username]);
             }
         }
 

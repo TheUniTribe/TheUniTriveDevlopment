@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/react';
 const AuthModal = ({ mode, onClose, switchMode, content }) => {
   const { data, setData, post, processing, errors, reset } = useForm({
     name: "",
+    username: '',
     email: "",
     password: "",
     password_confirmation: "",
@@ -26,7 +27,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
     setSuccess("");
 
     const endpoint = mode === "login" ? "/login" : "/register";
-
+    console.log("login");
     post(endpoint, {
       onSuccess: () => {
         setSuccess(
@@ -169,28 +170,53 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
           )}
 
           {mode === "register" && (
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-gray-700 text-sm font-medium mb-1"
-              >
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={data.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.name ? "border-red-500" : "border-gray-300"
-                }`}
-                placeholder="Enter your name"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+            <>
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className="block text-gray-700 text-sm font-medium mb-1"
+                >
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={data.name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.name ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Enter your name"
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="username"
+                  className="block text-gray-700 text-sm font-medium mb-1"
+                >
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={data.username}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.username ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Enter your username"
+                />
+                {errors.username && (
+                  <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                )}
+              </div>
+            </>
           )}
 
           <div className="mb-4">
@@ -198,10 +224,10 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
               htmlFor="email"
               className="block text-gray-700 text-sm font-medium mb-2"
             >
-              Email
+              Email or Username
             </label>
             <input
-              type="email"
+              type="text"
               id="email"
               name="email"
               value={data.email}
@@ -209,7 +235,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
               className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="your.email@example.com"
+              placeholder="your.email@example.com or username"
               required
             />
             {errors.email && (

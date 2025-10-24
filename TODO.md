@@ -1,4 +1,5 @@
-- [x] Add const liveModalRef = useRef(null); in the Focus refs section of Home.jsx
-- [ ] Run the development server to test the fix
-- [ ] Open the Live Events Modal and verify no ReferenceError in console
-- [ ] Confirm modal opens and closes correctly
+# TODO: Implement redirection for logged-in users from root to /home
+
+- [x] Modify the root '/' route in web.php to check authentication and redirect to '/home' if logged in
+- [x] Add necessary imports (Auth facade) to web.php
+- [ ] Test the redirection after login
