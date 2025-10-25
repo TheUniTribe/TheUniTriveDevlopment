@@ -6,7 +6,7 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from "react"
  * with tab navigation, social links, reputation tracking, and user interactions
  *
  * @module Profile
- * @version 3.0.0
+ * @version 4.0.0
  * @since 1.0.0
  */
 
@@ -41,13 +41,7 @@ const TAB_CONFIG = [
     { key: "connections", label: "Connections" },
 ];
 
-/**
- * @constant {Object} DEFAULT_CONTENT - Default content for sections
- */
-const DEFAULT_CONTENT = {
-    ABOUT: "Write something about yourself...",
-    EXPERIENCE: "Describe your experience...",
-};
+
 
 // =============================================================================
 // UTILITY FUNCTIONS
@@ -81,7 +75,7 @@ const simulateAPICall = (delay = 500) => new Promise((resolve) => setTimeout(res
 // =============================================================================
 
 /**
- * Mock database with multiple user profiles
+ * Mock database with multiple user profiles (Professional & Student)
  * @namespace MockDatabase
  */
 
@@ -89,8 +83,9 @@ const simulateAPICall = (delay = 500) => new Promise((resolve) => setTimeout(res
  * @constant {Object} MOCK_USERS_DB - Mock user database
  */
 const MOCK_USERS_DB = {
-    1: {
-        id: 1,
+    // Professional Profiles
+    3: {
+        id: 3,
         profileType: "professional",
         name: "John Doe",
         designation: "Senior Software Developer",
@@ -148,7 +143,7 @@ const MOCK_USERS_DB = {
             { icon: "💬", title: "Commented on a discussion", when: "3 hours ago" },
         ],
         comments: [{ id: 1, name: "Jane Smith", when: "2 hours ago", text: "Great profile!", avatar: "https://i.pravatar.cc/72?img=2" }],
-        badges: ["Top Contributor", "Verified Mentor"],
+        badges: ["Mentor"],
     },
     2: {
         id: 2,
@@ -178,7 +173,113 @@ const MOCK_USERS_DB = {
             },
         },
         aboutContent: "Creative UX designer passionate about human-centered design and mentoring designers.",
-        badges: ["Design Thought Leader"],
+        badges: ["mentee"],
+    },
+
+    // Student Profiles
+    1: {
+        id: 1,
+        profileType: "student",
+        name: "Alex Johnson",
+        major: "Computer Science",
+        university: "Stanford University",
+        expectedGraduation: "May 2024",
+        location: "Stanford, CA",
+        email: "alex.johnson@stanford.edu",
+        phone: "+1 (555) 987-6543",
+        gpa: "3.8",
+        academicLevel: "Junior",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=480&auto=format&fit=crop",
+        socialLinks: {
+            linkedin: "https://linkedin.com/in/alexjohnson",
+            github: "https://github.com/alexjohnson",
+            twitter: "https://twitter.com/alexjohnson",
+        },
+        followers: 156,
+        following: 89,
+        connections: [4, 5],
+        network: {
+            followers: 156,
+            following: 89,
+            connections: [4, 5],
+            followerBreakdown: {
+                "Computer Science": 80,
+                Engineering: 45,
+                Business: 20,
+                Other: 11,
+            },
+        },
+        aboutContent: "Passionate Computer Science student at Stanford University with interests in AI, machine learning, and software engineering. Actively seeking internships for Summer 2024.",
+        experienceContent: "Software Engineering Intern at Google (Summer 2023)\nResearch Assistant - AI Lab (2022-Present)\nTeaching Assistant - Data Structures (Fall 2022)",
+        reputation: {
+            stats: [
+                { label: "Posts", value: 23 },
+                { label: "Likes", value: 89 },
+                { label: "Comments", value: 45 },
+                { label: "Followers", value: 156 },
+            ],
+            details: [
+                { category: "Study Groups", count: 8, last: "1 day ago" },
+                { category: "Projects", count: 12, last: "3 days ago" },
+                { category: "Questions", count: 25, last: "2 hours ago" },
+            ],
+        },
+        discussions: [
+            { title: "Best resources for learning ML?", tag: "Machine Learning", when: "5 hours ago", snippet: "Looking for recommendations..." },
+            { title: "Summer internship experiences", tag: "Career", when: "2 days ago", snippet: "Sharing my internship journey..." },
+        ],
+        activities: [
+            { icon: "📚", title: "Joined Machine Learning Study Group", when: "2 hours ago" },
+            { icon: "💼", title: "Applied for Summer Internship", when: "1 day ago" },
+            { icon: "🏆", title: "Won Hackathon - AI Category", when: "3 days ago" },
+        ],
+        comments: [
+            { id: 1, name: "Professor Smith", when: "1 day ago", text: "Excellent work on the research project!", avatar: "https://i.pravatar.cc/72?img=3" },
+            { id: 2, name: "Emily Chen", when: "3 hours ago", text: "Great study tips!", avatar: "https://i.pravatar.cc/72?img=4" },
+        ],
+        badges: ["Mentor"],
+        courses: ["Machine Learning", "Data Structures & Algorithms", "Computer Vision", "Database Systems", "Software Engineering"],
+        skills: ["Python", "JavaScript", "React", "TensorFlow", "Java", "SQL"],
+        projects: [
+            { name: "AI Chatbot", description: "Built a conversational AI using TensorFlow", tech: ["Python", "TensorFlow", "NLP"] },
+            { name: "Course Planner", description: "Web app for course scheduling", tech: ["React", "Node.js", "MongoDB"] },
+        ],
+    },
+    4: {
+        id: 4,
+        profileType: "student",
+        name: "Maria Garcia",
+        major: "Business Administration",
+        university: "Harvard University",
+        expectedGraduation: "May 2025",
+        location: "Cambridge, MA",
+        email: "maria.garcia@harvard.edu",
+        academicLevel: "Sophomore",
+        gpa: "3.9",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=480&auto=format&fit=crop",
+        socialLinks: {
+            linkedin: "https://linkedin.com/in/mariagarcia",
+            instagram: "https://instagram.com/mariagarcia",
+        },
+        followers: 210,
+        following: 145,
+        connections: [3, 5],
+        network: {
+            followers: 210,
+            following: 145,
+            connections: [3, 5],
+            followerBreakdown: {
+                Business: 120,
+                Economics: 50,
+                "Computer Science": 25,
+                Other: 15,
+            },
+        },
+        aboutContent: "Business Administration student at Harvard with focus on entrepreneurship and technology. President of Entrepreneurship Club and actively involved in startup competitions.",
+        experienceContent: "Marketing Intern at TechStart (Summer 2023)\nPresident - Entrepreneurship Club (2023-Present)\nVolunteer - Local Business Incubator",
+        badges: ["mentee"],
+        courses: ["Financial Accounting", "Marketing Strategy", "Entrepreneurship", "Business Analytics", "Organizational Behavior"],
+        skills: ["Marketing", "Financial Analysis", "Leadership", "Public Speaking", "Data Analysis"],
     },
 };
 
@@ -357,40 +458,6 @@ function EmailIcon({ className = "w-4 h-4" }) {
 }
 
 /**
- * Location icon component
- * @function LocationIcon
- * @param {Object} props - Component props
- * @param {string} props.className - Additional CSS classes
- * @returns {React.Component} Location icon
- */
-function LocationIcon({ className = "w-4 h-4" }) {
-    return (
-        <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-    );
-}
-
-/**
- * Department icon component
- * @function DepartmentIcon
- * @param {Object} props - Component props
- * @param {string} props.className - Additional CSS classes
- * @returns {React.Component} Department icon
- */
-function DepartmentIcon({ className = "w-4 h-4" }) {
-    return (
-        <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z"
-                clipRule="evenodd"
-            />
-        </svg>
-    );
-}
-
-/**
  * Star icon component for Top Contributor badge
  * @function StarIcon
  * @param {Object} props - Component props
@@ -416,6 +483,55 @@ function VerifiedIcon({ className = "w-4 h-4" }) {
     return (
         <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+    );
+}
+
+/**
+ * Graduation cap icon for student profiles
+ * @function GraduationIcon
+ * @param {Object} props - Component props
+ * @param {string} props.className - Additional CSS classes
+ * @returns {React.Component} Graduation icon
+ */
+function GraduationIcon({ className = "w-4 h-4" }) {
+    return (
+        <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+        </svg>
+    );
+}
+
+/**
+ * Book icon for courses
+ * @function BookIcon
+ * @param {Object} props - Component props
+ * @param {string} props.className - Additional CSS classes
+ * @returns {React.Component} Book icon
+ */
+function BookIcon({ className = "w-4 h-4" }) {
+    return (
+        <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+        </svg>
+    );
+}
+
+/**
+ * Trophy icon for achievements
+ * @function TrophyIcon
+ * @param {Object} props - Component props
+ * @param {string} props.className - Additional CSS classes
+ * @returns {React.Component} Trophy icon
+ */
+function TrophyIcon({ className = "w-4 h-4" }) {
+    return (
+        <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4.268a2 2 0 11-2 0V6a3 3 0 116 0v7a1 1 0 01-1 1h-1a1 1 0 100 2h1a3 3 0 001-.732V16a1 1 0 01-1 1h-3a1 1 0 100 2h3a3 3 0 003-3V6a5 5 0 00-10 0v8a5 5 0 0010 0V6a1 1 0 00-1-1h-1z"
+                clipRule="evenodd"
+            />
         </svg>
     );
 }
@@ -553,7 +669,7 @@ function FollowingMetric({ count }) {
  * @returns {React.Component} Connections metric
  */
 function ConnectionsMetric({ count, connections }) {
-    const tooltipContent = connections?.length > 0 ? `${count} professional connections\nClick to view network` : `${count} professional connections`;
+    const tooltipContent = connections?.length > 0 ? `${count} connections\nClick to view network` : `${count} connections`;
 
     return (
         <Tooltip content={tooltipContent} position="bottom">
@@ -638,118 +754,69 @@ function TabNav({ tabs, active, onChange }) {
     );
 }
 
-function StaticAvatar({ src }) {
-    return (
-        <div className="relative w-20 h-20 md:w-24 md:h-24">
-            <img src={src} alt="User avatar" className="w-full h-full rounded-xl object-cover border-2 border-gray-100 shadow-sm" />
-        </div>
-    );
-}
+// =============================================================================
+// STUDENT ACADEMIC COMPONENTS
+// =============================================================================
 
 /**
- * Enhanced Personal Details component
- * @function PersonalDetails
- * @param {Object} props - Component props
- * @param {Object} props.data - User data
- * @returns {React.Component} Personal details
+ * Student-specific academic information components
+ * @namespace StudentAcademic
  */
-function PersonalDetails({ data }) {
-    const personalDetails = {
-        title: data?.designation || "",
-        location: data?.location || "",
-        email: data?.email || "",
-        phone: data?.phone || "",
-        department: data?.department || "",
-        roles: data?.roles || [],
-    };
+
+function StudentCourses({ courses }) {
+    if (!courses || courses.length === 0) return null;
 
     return (
-        <div className="pt-2 space-y-4">
-            {/* Contact Information with Icons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* <Tooltip content={`Professional title: ${personalDetails.title}`} position="bottom">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-200 cursor-help">
-                        <div className="p-2 rounded-md bg-gray-600 text-white">
-                            <DepartmentIcon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 font-medium">Title</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">{personalDetails.title}</p>
-                        </div>
-                    </div>
-                </Tooltip>
-
-                <Tooltip content={`Department: ${personalDetails.department}`} position="bottom">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-200 cursor-help">
-                        <div className="p-2 rounded-md bg-gray-600 text-white">
-                            <DepartmentIcon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 font-medium">Department</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">{personalDetails.department}</p>
-                        </div>
-                    </div>
-                </Tooltip>
-
-                <Tooltip content={`Based in ${personalDetails.location}`} position="bottom">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-200 cursor-help">
-                        <div className="p-2 rounded-md bg-red-500 text-white">
-                            <LocationIcon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 font-medium">Location</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">{personalDetails.location}</p>
-                        </div>
-                    </div>
-                </Tooltip> */}
-
-                <Tooltip content="Email address" position="bottom">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-200 cursor-help">
-                        <div className="p-2 rounded-md bg-blue-500 text-white">
-                            <EmailIcon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 font-medium">Email</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">{personalDetails.email}</p>
-                        </div>
-                    </div>
-                </Tooltip>
-
-                {personalDetails.phone && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 transition-colors duration-200">
-                        <div className="p-2 rounded-md bg-green-500 text-white">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                            </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 font-medium">Phone</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">{personalDetails.phone}</p>
-                        </div>
-                    </div>
-                )}
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                <BookIcon className="w-4 h-4" />
+                Current Courses
+            </h4>
+            <div className="flex flex-wrap gap-2">
+                {courses.map((course, index) => (
+                    <span key={index} className="px-3 py-1.5 bg-white text-blue-700 rounded-lg text-sm font-medium border border-blue-200">
+                        {course}
+                    </span>
+                ))}
             </div>
-
-            {/* Roles
-            {personalDetails.roles.length > 0 && (
-                <div>
-                    <div className="flex flex-wrap gap-2">
-                        {personalDetails.roles.map((role, index) => (
-                            <Tooltip key={index} content={`${role.role} since ${new Date(role.since).toLocaleDateString()}${role.notes ? ` - ${role.notes}` : ""}`} position="bottom">
-                                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 hover:border-blue-300 transition-colors duration-200 cursor-help">
-                                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                    <span className="text-sm font-medium text-blue-800">{role.role}</span>
-                                </div>
-                            </Tooltip>
-                        ))}
-                    </div>
-                </div>
-            )} */}
         </div>
     );
 }
 
-function SocialLinks({ links }) {
+function StudentSkills({ skills }) {
+    if (!skills || skills.length === 0) return null;
+
+    return (
+        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+            <h4 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
+                <TrophyIcon className="w-4 h-4" />
+                Skills & Technologies
+            </h4>
+            <div className="flex flex-wrap gap-2">
+                {skills.map((skill, index) => (
+                    <span key={index} className="px-3 py-1.5 bg-white text-green-700 rounded-lg text-sm font-medium border border-green-200">
+                        {skill}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function StudentAcademicInfo({ courses, skills }) {
+    if ((!courses || courses.length === 0) && (!skills || skills.length === 0)) {
+        return null;
+    }
+
+    return (
+        <div className="space-y-4">
+            <StudentCourses courses={courses} />
+            <StudentSkills skills={skills} />
+        </div>
+    );
+}
+
+function SocialLinks({ links, email, phone }) {
     // Social media icons mapping
     const socialIcons = {
         linkedin: (
@@ -792,6 +859,17 @@ function SocialLinks({ links }) {
                 <path d="M22 7h-7V5h7v2zm1.726 10c-.442 1.297-2.029 3-5.101 3-3.074 0-5.564-1.729-5.564-5.675 0-3.91 2.325-5.92 5.466-5.92 3.082 0 4.964 1.782 5.375 4.426.078.506.109 1.188.095 2.14H15.97c.13 3.211 3.483 3.312 4.588 2.029h3.168zm-7.686-4h4.965c-.105-1.547-1.136-2.219-2.477-2.219-1.466 0-2.277.768-2.488 2.219zm-9.574 6.988H0V5.012h6.466v1.973H2.258v3.75h3.892v1.953H2.258v3.836h4.208v1.464z" />
             </svg>
         ),
+        email: (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+        ),
+        phone: (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+            </svg>
+        ),
     };
 
     // Default icon for unknown platforms
@@ -800,21 +878,50 @@ function SocialLinks({ links }) {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2V9h2v8z" />
         </svg>
     );
-
+    const hasSocialLinks = Object.keys(links).length > 0;
+    const hasContactInfo = email || phone;
     return (
-        <div className="flex flex-wrap gap-2">
-            {Object.entries(links).map(([platform, url]) => (
-                <Tooltip key={platform} content={platform} position="bottom">
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105 transition-all duration-200 font-medium"
-                    >
-                        {socialIcons[platform.toLowerCase()] || defaultIcon}
-                    </a>
-                </Tooltip>
-            ))}
+        <div className="flex flex-wrap items-center gap-2">
+            {/* Social Media Links */}
+            {hasSocialLinks && (
+                <>
+                    {Object.entries(links).map(([platform, url]) => (
+                        <Tooltip key={platform} content={platform} position="bottom">
+                            <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105 transition-all duration-200 font-medium"
+                            >
+                                {socialIcons[platform.toLowerCase()] || defaultIcon}
+                            </a>
+                        </Tooltip>
+                    ))}
+                </>
+            )}
+
+            {/* Visual separator if both social links and contact info exist */}
+            {hasSocialLinks && hasContactInfo && <div className="w-px h-6 bg-gray-300 mx-1"></div>}
+
+            {/* Contact Information */}
+            {hasContactInfo && (
+                <>
+                    {email && (
+                        <Tooltip content={`Email: ${email}`} position="bottom">
+                            <a href={`mailto:${email}`} className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 hover:scale-105 transition-all duration-200 font-medium">
+                                {socialIcons.email}
+                            </a>
+                        </Tooltip>
+                    )}
+                    {phone && (
+                        <Tooltip content={`Call: ${phone}`} position="bottom">
+                            <a href={`tel:${phone}`} className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 hover:scale-105 transition-all duration-200 font-medium">
+                                {socialIcons.phone}
+                            </a>
+                        </Tooltip>
+                    )}
+                </>
+            )}
         </div>
     );
 }
@@ -969,13 +1076,15 @@ function ContentDisplay({ content }) {
 }
 
 /**
- * Connection card component
+ * Enhanced ConnectionCard for both professional and student profiles
  * @function ConnectionCard
  * @param {Object} props - Component props
  * @param {Object} props.connection - Connection user data
  * @returns {React.Component} Connection card
  */
 function ConnectionCard({ connection }) {
+    const isStudent = connection?.profileType === "student";
+
     return (
         <div className="flex flex-col items-center text-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 bg-white">
             <div className="relative mb-3">
@@ -985,7 +1094,7 @@ function ConnectionCard({ connection }) {
 
             <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate w-full">{connection.name}</h4>
 
-            <p className="text-xs text-gray-600 mb-2 truncate w-full">{connection.designation}</p>
+            <p className="text-xs text-gray-600 mb-2 truncate w-full">{isStudent ? `${connection.major} • ${connection.university}` : connection.designation}</p>
 
             <div className="flex flex-wrap gap-1 justify-center mb-3">
                 {connection.roles?.slice(0, 2).map((role, index) => (
@@ -993,6 +1102,7 @@ function ConnectionCard({ connection }) {
                         {role.role}
                     </span>
                 ))}
+                {isStudent && connection.academicLevel && <span className="inline-block px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded-md">{connection.academicLevel}</span>}
             </div>
 
             <div className="flex gap-2 w-full">
@@ -1016,7 +1126,7 @@ function Connections({ connections }) {
             <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">👥</div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Connections Yet</h3>
-                <p className="text-gray-600 max-w-md mx-auto">Start connecting with other professionals to build your network and discover new opportunities.</p>
+                <p className="text-gray-600 max-w-md mx-auto">Start connecting with other people to build your network and discover new opportunities.</p>
                 <button className="mt-4 rounded-lg px-6 py-2.5 bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200 font-medium">Find Connections</button>
             </div>
         );
@@ -1029,7 +1139,7 @@ function Connections({ connections }) {
                     <h3 className="text-lg font-semibold text-gray-900">
                         {connections.length} Connection{connections.length !== 1 ? "s" : ""}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">Professionals in your network</p>
+                    <p className="text-sm text-gray-600 mt-1">People in your network</p>
                 </div>
                 <div className="flex gap-2">
                     <button className="rounded-lg px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-sm font-medium">Sort by: Recent</button>
@@ -1123,6 +1233,8 @@ export default function Profile({ userId }) {
         return <ErrorDisplay message={error || "User not found"} onRetry={() => window.location.reload()} />;
     }
 
+    const isStudent = profileData.profileType === "student";
+
     /**
      * Render overview section with multiple cards
      * @function renderOverview
@@ -1130,7 +1242,7 @@ export default function Profile({ userId }) {
      */
     const renderOverview = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SectionCard title="Latest & Popular Discussions">
+            <SectionCard title={isStudent ? "Study Discussions" : "Latest & Popular Discussions"}>
                 <Discussions items={profileData.discussions} />
             </SectionCard>
 
@@ -1141,6 +1253,27 @@ export default function Profile({ userId }) {
             <SectionCard title="Activities">
                 <Activities items={profileData.activities} />
             </SectionCard>
+
+            {/* Student-specific: Projects */}
+            {isStudent && profileData.projects && (
+                <SectionCard title="Recent Projects">
+                    <div className="space-y-4">
+                        {profileData.projects.map((project, index) => (
+                            <div key={index} className="p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-200">
+                                <h4 className="font-semibold text-gray-900 text-sm mb-2">{project.name}</h4>
+                                <p className="text-sm text-gray-600 mb-3">{project.description}</p>
+                                <div className="flex flex-wrap gap-1">
+                                    {project.tech.map((tech, techIndex) => (
+                                        <span key={techIndex} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md">
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </SectionCard>
+            )}
 
             <SectionCard title="Comments from Users">
                 <div className="space-y-4">
@@ -1169,60 +1302,74 @@ export default function Profile({ userId }) {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="h-full bg-gray-50 text-gray-900">
             <main className="max-w-6xl mx-auto px-4 py-6 grid gap-4">
                 {/* Profile Header Section with Avatar */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6">
-                        {/* Avatar Section */}
-                        <div className="flex justify-center md:justify-start">
-                            <div className="relative w-32 h-32">
+                    {/* Outer grid: 2 rows */}
+                    <div className="grid grid-rows-[auto_auto] gap-6">
+                        {/* === Row 1: Avatar + Info === */}
+                        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
+                            {/* Avatar Section */}
+                            <div className="relative w-32 h-32 mx-auto md:mx-0">
                                 <img src={profileData.avatar} alt="User avatar" className="w-full h-full rounded-xl object-cover border-2 border-gray-100 shadow-sm" />
                                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
                                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Profile Info Section */}
-                        <div className="space-y-4">
-                            {/* Header with grid layout */}
-                            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
-                                {/* Left side - User info */}
-                                <div className="min-w-0">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-1 truncate">{profileData.name}</h2>
-                                    <p className="text-gray-600 font-medium truncate">
-                                        {profileData.designation} at {profileData.company}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mt-1 truncate">
-                                        {profileData.yearsExperience} years experience • {profileData.location}
-                                    </p>
-                                </div>
+                            {/* Profile Info */}
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
+                                    {/* Left - Name, title, details */}
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h2 className="text-2xl font-bold text-gray-900 truncate">{profileData.name}</h2>
+                                            <span className={cx("px-2.5 py-1 text-xs font-medium rounded-full border", isStudent ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-purple-100 text-purple-800 border-purple-200")}>
+                                                {isStudent ? "Student" : "Professional"}
+                                            </span>
+                                        </div>
 
-                                {/* Right side - User ID and badges */}
-                                <div className="flex flex-col items-end gap-2">
-                                    <div className="flex gap-2 flex-nowrap">
-                                        {profileData.badges.map((badge, index) => (
-                                            <Tooltip key={index} content={badge} position="bottom">
-                                                <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md font-medium whitespace-nowrap flex-shrink-0 border border-yellow-200">
-                                                    {badge === "Top Contributor" && <StarIcon className="w-3.5 h-3.5" />}
-                                                    {badge === "Verified Mentor" && <VerifiedIcon className="w-3.5 h-3.5" />}
-                                                </span>
-                                            </Tooltip>
-                                        ))}
+                                        <p className="text-gray-600 font-medium truncate">{isStudent ? `${profileData.major} • ${profileData.university}` : `${profileData.designation} at ${profileData.company}`}</p>
+
+                                        <p className="text-sm text-gray-500 mt-1 truncate">
+                                            {isStudent ? `${profileData.location} • Graduating ${profileData.expectedGraduation}` : `${profileData.yearsExperience} years experience • ${profileData.location}`}
+                                        </p>
+                                    </div>
+
+                                    {/* Right - Badges */}
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="flex gap-2 flex-wrap justify-end">
+                                            {profileData.badges.map((badge, index) => (
+                                                <Tooltip key={index} content={badge} position="bottom">
+                                                    <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md font-medium border border-yellow-200 whitespace-nowrap">
+                                                        {badge === "Top Contributor" && <StarIcon className="w-3.5 h-3.5" />}
+                                                        {badge === "Verified Mentor" && <VerifiedIcon className="w-3.5 h-3.5" />}
+                                                        {badge.includes("Dean") && <TrophyIcon className="w-3.5 h-3.5" />}
+                                                        {badge.includes("Hackathon") && <TrophyIcon className="w-3.5 h-3.5" />}
+                                                        {!badge.includes("Top Contributor") && !badge.includes("Verified Mentor") && !badge.includes("Dean") && !badge.includes("Hackathon") && <StarIcon className="w-3.5 h-3.5" />}
+                                                    </span>
+                                                </Tooltip>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Social Metrics Grid */}
-                            <SocialMetricsGrid network={profileData.network} />
+                                {/* Social Metrics */}
+                                <SocialMetricsGrid network={profileData.network} />
+                            </div>
                         </div>
-                        {/* Social Links */}
-                        <SocialLinks links={profileData.socialLinks} />
+
+                        {/* === Row 2: Social Links + Contact === */}
+                        <div className="border-t border-gray-100 pt-4">
+                            <SocialLinks links={profileData.socialLinks} email={profileData.email} phone={profileData.phone} />
+                        </div>
                     </div>
 
-                {/* Personal Details - Full Width */}
-                    <PersonalDetails data={profileData} />
+                    {/* Additional Info below */}
+                    <div className="mt-6">
+                        <StudentAcademicInfo courses={profileData.courses} skills={profileData.skills} />
+                    </div>
                 </div>
 
                 {/* Fixed Tab Navigation */}
@@ -1236,7 +1383,7 @@ export default function Profile({ userId }) {
                 )}
 
                 {activeTab === "experience" && (
-                    <SectionCard title="Experience">
+                    <SectionCard title={isStudent ? "Experience & Activities" : "Experience"}>
                         <ContentDisplay content={profileData.experienceContent} />
                     </SectionCard>
                 )}
@@ -1244,7 +1391,7 @@ export default function Profile({ userId }) {
                 {activeTab === "overview" && renderOverview()}
 
                 {activeTab === "discussions" && (
-                    <SectionCard title="Discussions">
+                    <SectionCard title={isStudent ? "Study Discussions" : "Discussions"}>
                         <Discussions items={profileData.discussions} />
                     </SectionCard>
                 )}
@@ -1268,7 +1415,7 @@ export default function Profile({ userId }) {
                 )}
 
                 {activeTab === "connections" && (
-                    <SectionCard title="Professional Network">
+                    <SectionCard title={isStudent ? "Study Network" : "Professional Network"}>
                         <Connections connections={connections} />
                     </SectionCard>
                 )}
