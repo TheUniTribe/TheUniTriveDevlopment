@@ -17,6 +17,32 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
+Route::get('/run-seeder', function () {
+    // This will drop all tables, run all migrations, and then seed
+    Artisan::call('migrate:refresh', [
+        '--seed' => true,
+        '--seeder' => 'DatabaseSeeder', // optional, defaults to DatabaseSeeder
+    ]);
+
+    return response()->json([
+        'message' => 'Database migrated and seeded successfully!',
+        'output'  => Artisan::output(),
+    ]);
+})->name('run.seeder');
+
+Route::get('/download-credentials', function () {
+    $path = storage_path('app/seeded_users_credentials.csv');
+    if (file_exists($path)) {
+        return response()->download($path);
+    }
+    return response()->json(['error' => 'File not found'], 404);
+})->name('download.credentials');
+
+Route::get('/show-usernames', function () {
+    $usernames = \DB::table('users')->pluck('email')->toArray();
+    return response()->json(['usernames' => $usernames]);
+})->name('show.usernames');
+
 
 
 Route::post('/register', [RegisterController::class, 'registration'])->name('register');;
@@ -33,6 +59,11 @@ Route::get('/discussionforum', function () {
     return Inertia::render('DiscussionForum'); // Your Inertia page component
 })->name('discussionforum');
 
+// Public profile show route (for JSON data)
+Route::get('/profiles/{user}', [ProfileController::class, 'index'])->name('profile.index');
+
+// API route for profile data
+
 Route::middleware('auth')->group(function () {
 
     Route::get('/home', function () {
@@ -40,11 +71,10 @@ Route::middleware('auth')->group(function () {
         'content' => session('content', 'dashboard') // Default to 'home' if no content in session
     ]);
 })->name('home');
-    Route::get('/profile/{user}', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/profile/{user}', [ProfileController::class, 'editUser'])->name('profile.editUser');
+    // Route::get('/profile/{user}', [ProfileController::class, 'editUser'])->name('profile.editUser');
 
     Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
 

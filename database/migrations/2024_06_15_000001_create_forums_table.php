@@ -15,7 +15,7 @@ class CreateForumsTable extends Migration
             $table->string('category')->default('general');
             $table->unsignedInteger('comments')->default(0);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('network_id')->constrained()->onDelete('cascade');
+            // $table->foreignId('network_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

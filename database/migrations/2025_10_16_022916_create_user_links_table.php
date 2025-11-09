@@ -10,15 +10,21 @@ return new class extends Migration
     {
         Schema::create('user_links', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')
+                  ->constrained();
+            
             $table->enum('platform', [
                 'twitter', 'linkedin', 'instagram', 'facebook', 'youtube',
                 'tiktok', 'github', 'website', 'custom'
             ]);
+            
             $table->string('url', 512);
-            $table->string('label')->nullable();        // used only if platform = 'custom'
+            $table->string('label')->nullable(); // used only if platform = 'custom'
             $table->boolean('is_public')->default(true);
+            
             $table->timestamps();
+
+            $table->unique(['user_id', 'platform']); // optional uniqueness rule
         });
     }
 

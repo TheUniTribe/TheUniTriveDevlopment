@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Link, usePage, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FocusLock from "react-focus-lock";
 
 /**
  * @file Header.jsx - Enhanced application header with comprehensive navigation and UI controls
@@ -17,14 +18,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 // CONSTANTS & CONFIGURATION
 // =============================================================================
 
-/**
- * Application constants and configuration
- * @namespace Constants
- */
-
-/**
- * @constant {Object} ANIMATION_CONFIG - Framer Motion animation configurations
- */
 const ANIMATION_CONFIG = {
   SPRING: { type: "spring", stiffness: 500, damping: 30 },
   GENTLE: { type: "spring", stiffness: 300, damping: 30 },
@@ -32,18 +25,12 @@ const ANIMATION_CONFIG = {
   BOUNCE: { duration: 0.5 }
 };
 
-/**
- * @constant {Object} DROPDOWN_TYPES - Available dropdown types
- */
 const DROPDOWN_TYPES = {
   NOTIFICATIONS: 'notifications',
   MESSAGES: 'messages',
   PROFILE: 'profile'
 };
 
-/**
- * @constant {Object} NOTIFICATION_TYPES - Notification type configurations
- */
 const NOTIFICATION_TYPES = {
   MESSAGE: { bg: 'bg-blue-100', text: 'text-blue-600' },
   SOCIAL: { bg: 'bg-green-100', text: 'text-green-600' },
@@ -54,20 +41,6 @@ const NOTIFICATION_TYPES = {
 // ICON SYSTEM
 // =============================================================================
 
-/**
- * Icon components and utilities
- * @namespace Icons
- */
-
-/**
- * Base icon wrapper component
- * @function IconWrapper
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - SVG path elements
- * @param {string} [props.className=""] - Additional CSS classes
- * @param {string} [props.size="w-4 h-4"] - Icon size
- * @returns {React.Component} Icon wrapper
- */
 const IconWrapper = ({ children, className = "", size = "w-4 h-4" }) => (
   <svg 
     className={`${size} ${className}`} 
@@ -79,10 +52,6 @@ const IconWrapper = ({ children, className = "", size = "w-4 h-4" }) => (
     {children}
   </svg>
 );
-
-/**
- * Individual icon components with consistent styling
- */
 
 const HomeIcon = () => (
   <IconWrapper>
@@ -177,10 +146,6 @@ const XIcon = () => (
   </IconWrapper>
 );
 
-/**
- * Icon mapping for string-based icon references
- * @constant {Object} iconMap
- */
 const iconMap = {
   MessageCircle: MessageCircleIcon,
   Users: UsersIcon,
@@ -191,10 +156,6 @@ const iconMap = {
 // NAVIGATION CONFIGURATION
 // =============================================================================
 
-/**
- * Navigation menu configuration
- * @constant {Array} MENU_ITEMS
- */
 const MENU_ITEMS = [
   { 
     id: 'dashboard', 
@@ -237,25 +198,8 @@ const MENU_ITEMS = [
 // UTILITY FUNCTIONS
 // =============================================================================
 
-/**
- * Utility functions for common operations
- * @namespace Utils
- */
-
-/**
- * CSS class name merger utility
- * @function cx
- * @param {...string} args - Class names to merge
- * @returns {string} Merged class names
- */
 const cx = (...args) => args.filter(Boolean).join(" ");
 
-/**
- * Get user initials from name
- * @function getUserInitials
- * @param {string} name - User's full name
- * @returns {string} User initials
- */
 const getUserInitials = (name) => {
   if (!name) return 'U';
   return name
@@ -269,20 +213,18 @@ const getUserInitials = (name) => {
 // CUSTOM HOOKS
 // =============================================================================
 
-/**
- * Custom hooks for state management
- * @namespace Hooks
- */
-
-/**
- * Header state management hook
- * @function useHeaderState
- * @param {Object} props - Header component props
- * @returns {Object} Header state and methods
- */
 const useHeaderState = (props) => {
-  const { auth } = usePage().props;
-  
+  // Safely read page props and normalize auth/user shape
+  const page = usePage();
+  const pageProps = page?.props || {};
+
+  // Normalization: allow either { auth: { user } } or { user } or { auth } or null
+  const normalizedAuth = pageProps.auth
+    ? pageProps.auth
+    : (pageProps.user ? { user: pageProps.user } : (pageProps.auth === undefined ? null : pageProps.auth));
+
+  const auth = normalizedAuth;
+
   // Local state
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -290,8 +232,7 @@ const useHeaderState = (props) => {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [visibleLetters, setVisibleLetters] = useState(0);
   const [isLiveHovered, setIsLiveHovered] = useState(false);
-  
-  // Local fallback states for uncontrolled components
+
   const [localProfileOpen, setLocalProfileOpen] = useState(false);
   const [localMessagesOpen, setLocalMessagesOpen] = useState(false);
   const [localNotificationsOpen, setLocalNotificationsOpen] = useState(false);
@@ -301,12 +242,10 @@ const useHeaderState = (props) => {
   const isMessagesControlled = typeof props.setIsMessagesOpen === 'function';
   const isNotificationsControlled = typeof props.setIsNotificationsOpen === 'function';
 
-  // State getters
   const profileOpen = isProfileControlled ? props.isProfileOpen : localProfileOpen;
   const messagesOpen = isMessagesControlled ? props.isMessagesOpen : localMessagesOpen;
   const notificationsOpen = isNotificationsControlled ? props.isNotificationsOpen : localNotificationsOpen;
 
-  // State setters
   const setProfileOpen = useCallback((value) => {
     if (isProfileControlled) {
       props.setIsProfileOpen(value);
@@ -331,29 +270,12 @@ const useHeaderState = (props) => {
     }
   }, [isNotificationsControlled, props.setIsNotificationsOpen]);
 
-  /**
-   * Handle navigation between pages
-   * @function handleNavigation
-   * @param {string} pageName - Target page name
-   * @param {Event} event - Click event
-   * @param {string} userId - User ID for profile navigation
-   */
   const handleNavigation = useCallback((pageName, event, userId) => {
     event?.preventDefault?.();
-    
-    if (pageName === "profile" && userId) {
-      router.visit(`/profile/${userId}`);
-    } else {
       setActivePage(pageName);
       props.SetPage(pageName);
-    }
-  }, [props.SetPage]);
+  }, [props.SetPage, auth]);
 
-  /**
-   * Handle dropdown toggle with exclusive behavior
-   * @function handleDropdownToggle
-   * @param {string} dropdownType - Type of dropdown to toggle
-   */
   const handleDropdownToggle = useCallback((dropdownType) => {
     const closeAllExcept = (typeToKeepOpen) => {
       if (typeToKeepOpen !== DROPDOWN_TYPES.MESSAGES) setMessagesOpen(false);
@@ -394,10 +316,6 @@ const useHeaderState = (props) => {
     setMessagesOpen, setNotificationsOpen, setProfileOpen
   ]);
 
-  /**
-   * Handle user logout
-   * @function handleLogout
-   */
   const handleLogout = () => {
     window.location.href = "/logout";
   };
@@ -432,12 +350,10 @@ const useHeaderState = (props) => {
   };
 };
 
-/**
- * Click outside detection hook
- * @function useClickOutside
- * @param {Array} refs - Array of refs to check
- * @param {Function} handler - Handler function
- */
+// =============================================================================
+// Click outside detection hook
+// =============================================================================
+
 const useClickOutside = (refs, handler) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -459,25 +375,9 @@ const useClickOutside = (refs, handler) => {
 // UI COMPONENTS
 // =============================================================================
 
-/**
- * Reusable UI components
- * @namespace Components
- */
-
-/**
- * Logo component with animated text
- * @function LogoComponent
- * @param {Object} props - Component props
- * @param {string} props.logoText - Main logo text
- * @param {string} props.logoSuffix - Logo suffix text
- * @param {boolean} props.isHovered - Whether logo is hovered
- * @param {number} props.visibleLetters - Number of visible letters for animation
- * @returns {React.Component} Logo component
- */
 const LogoComponent = memo(({ logoText, logoSuffix, isHovered, visibleLetters }) => (
   <Link href="/home" className="flex items-center space-x-2 group">
     <div className="flex items-center space-x-3 group cursor-pointer">
-      {/* Logo Icon */}
       <div className="relative">
         <motion.div 
           className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full"
@@ -493,7 +393,6 @@ const LogoComponent = memo(({ logoText, logoSuffix, isHovered, visibleLetters })
         </motion.span>
       </div>
 
-      {/* Logo Text */}
       <div className="relative">
         <span className="text-2xl font-bold font-serif tracking-tight bg-gradient-to-r from-gray-900 to-blue-700 bg-clip-text text-transparent">
           {logoText.split('').map((letter, index) => (
@@ -517,7 +416,6 @@ const LogoComponent = memo(({ logoText, logoSuffix, isHovered, visibleLetters })
           </motion.span>
         </span>
 
-        {/* Animated underline */}
         <motion.div 
           className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600"
           initial={{ width: 0 }}
@@ -529,15 +427,6 @@ const LogoComponent = memo(({ logoText, logoSuffix, isHovered, visibleLetters })
   </Link>
 ));
 
-/**
- * Navigation item component
- * @function NavigationItem
- * @param {Object} props - Component props
- * @param {Object} props.item - Navigation item configuration
- * @param {string} props.activePage - Currently active page
- * @param {Function} props.onNavigate - Navigation handler
- * @returns {React.Component} Navigation item
- */
 const NavigationItem = memo(({ item, activePage, onNavigate }) => {
   const IconComponent = item.icon;
   const isActive = activePage === item.id;
@@ -567,7 +456,6 @@ const NavigationItem = memo(({ item, activePage, onNavigate }) => {
         <span className="text-sm font-medium">{item.label}</span>
       </div>
       
-      {/* Active indicator */}
       {isActive && (
         <motion.div 
           className="absolute bottom-0 left-3 right-3 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-t-full"
@@ -579,17 +467,6 @@ const NavigationItem = memo(({ item, activePage, onNavigate }) => {
   );
 });
 
-/**
- * Live events button component
- * @function LiveButton
- * @param {Object} props - Component props
- * @param {Function} props.onClick - Click handler
- * @param {Function} props.onMouseEnter - Mouse enter handler
- * @param {Function} props.onMouseLeave - Mouse leave handler
- * @param {boolean} props.isHovered - Whether button is hovered
- * @param {string} [props.variant='desktop'] - Button variant
- * @returns {React.Component} Live button
- */
 const LiveButton = memo(({ onClick, onMouseEnter, onMouseLeave, isHovered, variant = 'desktop' }) => {
   const buttonClass = variant === 'mobile'
     ? "flex items-center w-full px-4 py-3 rounded-xl transition-all duration-300 bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-lg hover:shadow-xl"
@@ -625,7 +502,6 @@ const LiveButton = memo(({ onClick, onMouseEnter, onMouseLeave, isHovered, varia
         </div>
         <span className="text-sm font-semibold">Live Now</span>
         
-        {/* Shimmer effect for desktop */}
         {variant === 'desktop' && (
           <motion.div 
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
@@ -638,27 +514,16 @@ const LiveButton = memo(({ onClick, onMouseEnter, onMouseLeave, isHovered, varia
   );
 });
 
-/**
- * Dropdown container component
- * @function DropdownContainer
- * @param {Object} props - Component props
- * @param {boolean} props.isOpen - Whether dropdown is open
- * @param {React.Ref} props.ref - Dropdown ref
- * @param {string} props.title - Dropdown title
- * @param {React.ReactNode} props.children - Dropdown content
- * @param {Function} [props.onClick] - Click handler
- * @returns {React.Component} Dropdown container
- */
-const DropdownContainer = memo(({ isOpen, ref, title, children, onClick }) => (
+const DropdownContainer = memo(({ isOpen, containerRef, title, children, onClick }) => (
   <AnimatePresence>
     {isOpen && (
       <motion.div
-        ref={ref}
+        ref={containerRef}
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={ANIMATION_CONFIG.SPRING}
-        className="absolute left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl ring-1 ring-gray-200/80 backdrop-blur-lg z-[9999] overflow-hidden"
+        className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl ring-1 ring-gray-200/80 backdrop-blur-lg z-[9999] overflow-hidden"
         role="menu"
         onClick={onClick}
       >
@@ -668,204 +533,6 @@ const DropdownContainer = memo(({ isOpen, ref, title, children, onClick }) => (
   </AnimatePresence>
 ));
 
-/**
- * Messages dropdown component
- * @function MessagesDropdown
- * @param {Object} props - Component props
- * @param {boolean} props.isOpen - Whether dropdown is open
- * @param {React.Ref} props.ref - Dropdown ref
- * @param {Array} props.messages - Messages data
- * @returns {React.Component} Messages dropdown
- */
-const MessagesDropdown = memo(({ isOpen, ref, messages }) => {
-  const unreadCount = messages.filter(msg => msg.unread).length;
-  
-  return (
-    <DropdownContainer isOpen={isOpen} ref={ref} title="Messages">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-        <h3 className="text-base font-semibold text-gray-900">Messages</h3>
-        <span className="text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 px-2.5 py-1 rounded-full shadow-sm">
-          {unreadCount} new
-        </span>
-      </div>
-      
-      {/* Messages List */}
-      <div className="max-h-96 overflow-y-auto">
-        {messages.map((item, index) => (
-          <motion.div 
-            key={item.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className={cx(
-              "px-5 py-4 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-b-0",
-              item.unread && 'bg-blue-50/50'
-            )}
-          >
-            <div className="flex space-x-3">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-md">
-                  {item.avatar}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-semibold text-gray-900 truncate">{item.name}</span>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">{item.time}</span>
-                </div>
-                <p className="text-sm text-gray-600 truncate mt-1">{item.text}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-      
-      {/* Footer */}
-      <button className="block w-full text-center px-5 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 border-t border-gray-100 transition-colors duration-200 bg-gray-50/50">
-        View all messages
-      </button>
-    </DropdownContainer>
-  );
-});
-
-/**
- * Notifications dropdown component
- * @function NotificationsDropdown
- * @param {Object} props - Component props
- * @param {boolean} props.isOpen - Whether dropdown is open
- * @param {React.Ref} props.ref - Dropdown ref
- * @param {Array} props.notifications - Notifications data
- * @returns {React.Component} Notifications dropdown
- */
-const NotificationsDropdown = memo(({ isOpen, ref, notifications }) => {
-  const unreadCount = notifications.filter(notif => !notif.read).length;
-  
-  return (
-    <DropdownContainer isOpen={isOpen} ref={ref} title="Notifications">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-        <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
-        <span className="text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 px-2.5 py-1 rounded-full shadow-sm">
-          {unreadCount} new
-        </span>
-      </div>
-      
-      {/* Notifications List */}
-      <div className="max-h-96 overflow-y-auto">
-        {notifications.map((item, index) => {
-          const typeConfig = NOTIFICATION_TYPES[item.type] || NOTIFICATION_TYPES.EVENT;
-          const IconComponent = typeof item.icon === 'string' 
-            ? iconMap[item.icon] || BellIcon 
-            : item.icon || BellIcon;
-          
-          return (
-            <motion.div 
-              key={item.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={cx(
-                "px-5 py-4 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-b-0",
-                !item.read && 'bg-blue-50/50'
-              )}
-            >
-              <div className="flex space-x-3">
-                <div className="flex-shrink-0">
-                  <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center", typeConfig.bg, typeConfig.text)}>
-                    <IconComponent />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800">{item.text}</p>
-                  <p className="text-xs text-gray-500 mt-1.5">{item.time}</p>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-      
-      {/* Footer */}
-      <button className="block w-full text-center px-5 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 border-t border-gray-100 transition-colors duration-200 bg-gray-50/50">
-        View all notifications
-      </button>
-    </DropdownContainer>
-  );
-});
-
-/**
- * Profile dropdown component
- * @function ProfileDropdown
- * @param {Object} props - Component props
- * @param {boolean} props.isOpen - Whether dropdown is open
- * @param {React.Ref} props.ref - Dropdown ref
- * @param {Object} props.user - User data
- * @param {Function} props.onNavigate - Navigation handler
- * @param {Function} props.onLogout - Logout handler
- * @returns {React.Component} Profile dropdown
- */
-const ProfileDropdown = memo(({ isOpen, ref, user, onNavigate, onLogout }) => (
-  <DropdownContainer isOpen={isOpen} ref={ref} title="Profile">
-    {/* User Info */}
-    <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-      <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'User'}</p>
-      <p className="text-xs text-gray-500 truncate mt-1">{user?.email || 'user@example.com'}</p>
-    </div>
-    
-    {/* Navigation Items */}
-    <div className="py-2">
-      <motion.button
-        whileHover={{ x: 4 }}
-        onClick={(e) => onNavigate("profile", e, user?.id)}
-        className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-all duration-200"
-      >
-        <div className="p-1.5 mr-3 rounded-lg bg-blue-100 text-blue-600">
-          <UserIcon />
-        </div>
-        <span>Profile</span>
-      </motion.button>
-      
-      <motion.button 
-        whileHover={{ x: 4 }}
-        onClick={(e) => onNavigate("settings", e)} 
-        className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-all duration-200"
-      >
-        <div className="p-1.5 mr-3 rounded-lg bg-purple-100 text-purple-600">
-          <SettingsIcon />
-        </div>
-        <span>Settings</span>
-      </motion.button>
-    </div>
-    
-    {/* Logout */}
-    <div className="border-t border-gray-100">
-      <motion.button 
-        whileHover={{ x: 4 }}
-        onClick={onLogout} 
-        className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-red-50 transition-all duration-200"
-      >
-        <div className="p-1.5 mr-3 rounded-lg bg-red-100 text-red-600">
-          <LogOutIcon />
-        </div>
-        <span>Sign Out</span>
-      </motion.button>
-    </div>
-  </DropdownContainer>
-));
-
-/**
- * Desktop navigation component
- * @function DesktopNavigation
- * @param {Object} props - Component props
- * @param {Array} props.menuItems - Navigation items
- * @param {string} props.activePage - Active page
- * @param {Function} props.onNavigate - Navigation handler
- * @param {Function} props.onLiveClick - Live button handler
- * @param {Function} props.onLiveHover - Live button hover handler
- * @param {boolean} props.isLiveHovered - Whether live button is hovered
- * @returns {React.Component} Desktop navigation
- */
 const DesktopNavigation = memo(({ 
   menuItems, 
   activePage, 
@@ -884,7 +551,6 @@ const DesktopNavigation = memo(({
       />
     ))}
 
-    {/* Live Button */}
     <LiveButton
       onClick={onLiveClick}
       onMouseEnter={() => onLiveHover(true)}
@@ -895,280 +561,14 @@ const DesktopNavigation = memo(({
   </nav>
 ));
 
-/**
- * Action buttons component
- * @function ActionButtons
- * @param {Object} props - Component props
- * @param {Object} props.state - Header state
- * @param {Object} props.actions - Header actions
- * @param {Object} props.refs - Component refs
- * @param {Array} props.messages - Messages data
- * @param {Array} props.notifications - Notifications data
- * @param {Function} props.onMobileMenuToggle - Mobile menu toggle handler
- * @returns {React.Component} Action buttons
- */
-const ActionButtons = memo(({ 
-  state, 
-  actions, 
-  refs, 
-  messages = [], 
-  notifications = [], 
-  onMobileMenuToggle 
-}) => {
-  const {
-    auth,
-    messagesOpen,
-    notificationsOpen,
-    profileOpen
-  } = state;
-
-  const {
-    handleDropdownToggle,
-    handleNavigation,
-    handleLogout
-  } = actions;
-
-  return (
-    <div className="flex items-center space-x-2">
-      {/* Messages Dropdown */}
-      <div className="hidden md:block relative" data-messages ref={refs.messagesRef}>
-        <motion.button
-          className="text-gray-600 hover:text-indigo-600 relative p-2 transition-all duration-300 rounded-xl hover:bg-indigo-50"
-          onClick={() => handleDropdownToggle(DROPDOWN_TYPES.MESSAGES)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <MailIcon />
-          <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium shadow-lg">
-            {messages.filter(msg => msg.unread).length}
-          </span>
-        </motion.button>
-        
-        <MessagesDropdown 
-          isOpen={messagesOpen} 
-          ref={refs.messagesRef}
-          messages={messages}
-        />
-      </div>
-
-      {/* Notifications Dropdown */}
-      <div className="relative" data-notifications ref={refs.notificationsRef}>
-        <motion.button
-          className="text-gray-600 hover:text-indigo-600 relative p-2 transition-all duration-300 rounded-xl hover:bg-indigo-50"
-          onClick={() => handleDropdownToggle(DROPDOWN_TYPES.NOTIFICATIONS)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <BellIcon />
-          <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium shadow-lg">
-            {notifications.filter(notif => !notif.read).length}
-          </span>
-        </motion.button>
-        
-        <NotificationsDropdown 
-          isOpen={notificationsOpen} 
-          ref={refs.notificationsRef}
-          notifications={notifications}
-        />
-      </div>
-
-      {/* Profile Dropdown */}
-      <div className="relative" ref={refs.profileRef}>
-        <motion.button
-          className="text-gray-600 hover:text-indigo-600 flex items-center space-x-2 focus:outline-none transition-colors duration-300"
-          onClick={() => handleDropdownToggle(DROPDOWN_TYPES.PROFILE)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="h-9 w-9 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center transition-all duration-300 hover:from-indigo-200 hover:to-purple-200 hover:shadow-lg shadow-md">
-            <div className="h-8 w-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-              {getUserInitials(auth.user?.name)}
-            </div>
-          </div>
-        </motion.button>
-
-        <ProfileDropdown 
-          isOpen={profileOpen} 
-          ref={refs.profileRef} 
-          user={auth.user} 
-          onNavigate={handleNavigation} 
-          onLogout={handleLogout} 
-        />
-      </div>
-
-      {/* Mobile Menu Toggle */}
-      <motion.button 
-        data-mobile-menu-button 
-        className="md:hidden text-gray-600 hover:text-indigo-600 transition-colors duration-300 p-2 rounded-xl hover:bg-gray-100" 
-        onClick={onMobileMenuToggle}
-        whileTap={{ scale: 0.9 }}
-      >
-        {state.isMobileMenuOpen ? <XIcon /> : <MenuIcon />}
-      </motion.button>
-    </div>
-  );
-});
-
-/**
- * Mobile menu component
- * @function MobileMenu
- * @param {Object} props - Component props
- * @param {Object} props.state - Header state
- * @param {Object} props.actions - Header actions
- * @param {Object} props.refs - Component refs
- * @param {Array} props.menuItems - Navigation items
- * @param {Array} props.messages - Messages data
- * @param {Array} props.notifications - Notifications data
- * @param {Function} props.onLiveClick - Live button handler
- * @returns {React.Component} Mobile menu
- */
-const MobileMenu = memo(({ 
-  state, 
-  actions, 
-  refs, 
-  menuItems, 
-  messages = [], 
-  notifications = [], 
-  onLiveClick 
-}) => {
-  const {
-    isMobileMenuOpen,
-    activePage
-  } = state;
-
-  const {
-    handleNavigation,
-    handleDropdownToggle,
-    setIsMobileMenuOpen
-  } = actions;
-
-  return (
-    <AnimatePresence>
-      {isMobileMenuOpen && (
-        <motion.div
-          ref={refs.mobileMenuRef}
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={ANIMATION_CONFIG.GENTLE}
-          className="md:hidden bg-white/95 backdrop-blur-xl shadow-2xl z-[9998] overflow-hidden border-t border-gray-200/50"
-        >
-          <div className="px-4 pt-4 pb-6 space-y-2">
-            {/* Navigation Items */}
-            {menuItems.map(item => {
-              const IconComponent = item.icon;
-              const isActive = activePage === item.id;
-              
-              return (
-                <motion.button
-                  key={item.id}
-                  className={cx(
-                    "flex items-center px-4 py-4 rounded-xl transition-all duration-300 w-full",
-                    isActive 
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 font-semibold shadow-sm' 
-                      : 'text-gray-700 hover:bg-gray-50'
-                  )}
-                  onClick={(e) => { 
-                    setIsMobileMenuOpen(false); 
-                    handleNavigation(item.id, e); 
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className={cx(
-                    "p-2 mr-3 rounded-lg",
-                    isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                  )}>
-                    <IconComponent />
-                  </div>
-                  <span className="text-base font-medium">{item.label}</span>
-                </motion.button>
-              );
-            })}
-
-            {/* Live Button */}
-            <div className="pt-2">
-              <LiveButton
-                onClick={() => { 
-                  setIsMobileMenuOpen(false); 
-                  onLiveClick(); 
-                }}
-                variant="mobile"
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-4 border-t border-gray-200/50 space-y-2">
-              {/* Messages */}
-              <motion.button 
-                className="flex items-center w-full px-4 py-4 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300"
-                onClick={() => { 
-                  setIsMobileMenuOpen(false); 
-                  handleDropdownToggle(DROPDOWN_TYPES.MESSAGES);
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="p-2 mr-3 rounded-lg bg-blue-100 text-blue-600">
-                  <MailIcon />
-                </div>
-                <span className="text-base font-medium">Messages</span>
-                <span className="ml-auto h-6 w-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
-                  {messages.filter(msg => msg.unread).length}
-                </span>
-              </motion.button>
-
-              {/* Notifications */}
-              <motion.button 
-                className="flex items-center w-full px-4 py-4 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300"
-                onClick={() => { 
-                  setIsMobileMenuOpen(false); 
-                  handleDropdownToggle(DROPDOWN_TYPES.NOTIFICATIONS);
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="p-2 mr-3 rounded-lg bg-amber-100 text-amber-600">
-                  <BellIcon />
-                </div>
-                <span className="text-base font-medium">Notifications</span>
-                <span className="ml-auto h-6 w-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
-                  {notifications.filter(notif => !notif.read).length}
-                </span>
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-});
-
 // =============================================================================
 // MAIN HEADER COMPONENT
 // =============================================================================
 
-/**
- * Main Header Component
- * @function Header
- * @param {Object} props - Component props
- * @param {Function} props.SetPage - Page navigation handler
- * @param {Array} [props.customMenuItems=[]] - Additional menu items
- * @param {Object} [props.customStyles={}] - Custom CSS styles
- * @param {boolean} [props.isLiveModalOpen] - Live modal open state (controlled)
- * @param {Function} [props.setIsLiveModalOpen] - Live modal state setter (controlled)
- * @param {boolean} [props.isNotificationsOpen] - Notifications open state (controlled)
- * @param {Function} [props.setIsNotificationsOpen] - Notifications state setter (controlled)
- * @param {boolean} [props.isMessagesOpen] - Messages open state (controlled)
- * @param {Function} [props.setIsMessagesOpen] - Messages state setter (controlled)
- * @param {boolean} [props.isProfileOpen] - Profile open state (controlled)
- * @param {Function} [props.setIsProfileOpen] - Profile state setter (controlled)
- * @param {Array} [props.notifications=[]] - Notifications data
- * @param {Array} [props.messages=[]] - Messages data
- * @returns {React.Component} Header component
- */
 const Header = ({
   SetPage = () => {},
   customMenuItems = [],
   customStyles = {},
-  // Controlled props
   isLiveModalOpen,
   setIsLiveModalOpen,
   isNotificationsOpen,
@@ -1177,11 +577,9 @@ const Header = ({
   setIsMessagesOpen,
   isProfileOpen,
   setIsProfileOpen,
-  // Data props
   notifications = [],
   messages = [],
 }) => {
-  // Initialize state and actions
   const state = useHeaderState({
     SetPage,
     isNotificationsOpen,
@@ -1233,16 +631,8 @@ const Header = ({
     notificationsRef: useRef(null)
   };
 
-  // Actions object for passing to child components
-  const actions = {
-    handleNavigation,
-    handleDropdownToggle,
-    handleLogout,
-    setIsMobileMenuOpen,
-    setProfileOpen,
-    setMessagesOpen,
-    setNotificationsOpen
-  };
+  // Derive unified user object
+  const user = (auth && auth.user) ? auth.user : (auth && auth.name ? auth : null);
 
   // Handle live button click
   const handleLiveClick = () => {
@@ -1315,7 +705,6 @@ const Header = ({
 
   return (
     <>
-      {/* Main Header */}
       <header 
         className={cx(
           "sticky top-0 z-50 transition-all duration-500",
@@ -1327,7 +716,6 @@ const Header = ({
       >
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-12">
-            {/* Logo */}
             <div 
               className="flex items-center space-x-4"
               onMouseEnter={() => setIsLogoHovered(true)}
@@ -1341,7 +729,6 @@ const Header = ({
               />
             </div>
 
-            {/* Desktop Navigation */}
             <DesktopNavigation
               menuItems={menuItems}
               activePage={activePage}
@@ -1351,29 +738,306 @@ const Header = ({
               isLiveHovered={isLiveHovered}
             />
 
-            {/* Action Buttons */}
-            <ActionButtons
-              state={state}
-              actions={actions}
-              refs={refs}
-              messages={messages}
-              notifications={notifications}
-              onMobileMenuToggle={handleMobileMenuToggle}
-            />
+            <div className="flex items-center space-x-2">
+              <div className="hidden md:block relative" data-messages>
+                <motion.button
+                  className="text-gray-600 hover:text-indigo-600 relative p-2 transition-all duration-300 rounded-xl hover:bg-indigo-50"
+                  onClick={() => handleDropdownToggle(DROPDOWN_TYPES.MESSAGES)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <MailIcon />
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium shadow-lg">
+                    {messages.filter(msg => msg.unread).length}
+                  </span>
+                </motion.button>
+
+                <DropdownContainer
+                  isOpen={messagesOpen}
+                  containerRef={refs.messagesRef}
+                  title="Messages"
+                >
+                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
+                    <h3 className="text-base font-semibold text-gray-900">Messages</h3>
+                    <span className="text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 px-2.5 py-1 rounded-full shadow-sm">
+                      {messages.filter(msg => msg.unread).length} new
+                    </span>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {messages.map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className={cx(
+                          "px-5 py-4 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-b-0",
+                          item.unread && 'bg-blue-50/50'
+                        )}
+                      >
+                        <div className="flex space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-md">
+                              {item.avatar}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                              <span className="text-sm font-semibold text-gray-900 truncate">{item.name}</span>
+                              <span className="text-xs text-gray-500 whitespace-nowrap">{item.time}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 truncate mt-1">{item.text}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <button className="block w-full text-center px-5 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 border-t border-gray-100 transition-colors duration-200 bg-gray-50/50">
+                    View all messages
+                  </button>
+                </DropdownContainer>
+              </div>
+
+              <div className="relative" data-notifications>
+                <motion.button
+                  className="text-gray-600 hover:text-indigo-600 relative p-2 transition-all duration-300 rounded-xl hover:bg-indigo-50"
+                  onClick={() => handleDropdownToggle(DROPDOWN_TYPES.NOTIFICATIONS)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <BellIcon />
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium shadow-lg">
+                    {notifications.filter(notif => !notif.read).length}
+                  </span>
+                </motion.button>
+
+                <DropdownContainer
+                  isOpen={notificationsOpen}
+                  containerRef={refs.notificationsRef}
+                  title="Notifications"
+                >
+                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
+                    <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
+                    <span className="text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 px-2.5 py-1 rounded-full shadow-sm">
+                      {notifications.filter(notif => !notif.read).length} new
+                    </span>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.map((item, index) => {
+                      const typeConfig = NOTIFICATION_TYPES[item.type] || NOTIFICATION_TYPES.EVENT;
+                      const IconComponent = typeof item.icon === 'string'
+                        ? iconMap[item.icon] || BellIcon
+                        : item.icon || BellIcon;
+
+                      return (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={cx(
+                            "px-5 py-4 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-b-0",
+                            !item.read && 'bg-blue-50/50'
+                          )}
+                        >
+                          <div className="flex space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center", typeConfig.bg, typeConfig.text)}>
+                                <IconComponent />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-800">{item.text}</p>
+                              <p className="text-xs text-gray-500 mt-1.5">{item.time}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  <button className="block w-full text-center px-5 py-3 text-sm font-medium text-indigo-600 hover:bg-gray-50 border-t border-gray-100 transition-colors duration-200 bg-gray-50/50">
+                    View all notifications
+                  </button>
+                </DropdownContainer>
+              </div>
+
+              <div className="relative" >
+                <motion.button
+                  className="text-gray-600 hover:text-indigo-600 flex items-center space-x-2 focus:outline-none transition-colors duration-300"
+                  onClick={() => handleDropdownToggle(DROPDOWN_TYPES.PROFILE)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="h-9 w-9 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center transition-all duration-300 hover:from-indigo-200 hover:to-purple-200 hover:shadow-lg shadow-md">
+                    <div className="h-8 w-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                      {(user?.first_name && user.first_name.charAt(0).toUpperCase()) || getUserInitials(user?.username)}
+                    </div>
+                  </div>
+                </motion.button>
+
+                <DropdownContainer
+                  isOpen={profileOpen}
+                  containerRef={refs.profileRef}
+                  title="Profile"
+                >
+                  {/* User Info */}
+                  <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {`${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate mt-1">
+                      {user?.email || "user@example.com"}
+                    </p>
+                  </div>
+
+                  {/* Navigation Items */}
+                  <div className="py-2">
+                    <motion.button
+                      whileHover={{ x: 4 }}
+                      onClick={(e) => handleNavigation(`profile/${user?.id}`, e)}
+                      className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-all duration-200"
+                    >
+                      <div className="p-1.5 mr-3 rounded-lg bg-blue-100 text-blue-600">
+                        <UserIcon />
+                      </div>
+                      <span>Profile</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ x: 4 }}
+                      onClick={(e) => handleNavigation("settings", e)}
+                      className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-all duration-200"
+                    >
+                      <div className="p-1.5 mr-3 rounded-lg bg-purple-100 text-purple-600">
+                        <SettingsIcon />
+                      </div>
+                      <span>Settings</span>
+                    </motion.button>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-gray-100">
+                    <motion.button
+                      whileHover={{ x: 4 }}
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-5 py-3 text-sm text-gray-700 hover:bg-red-50 transition-all duration-200"
+                    >
+                      <div className="p-1.5 mr-3 rounded-lg bg-red-100 text-red-600">
+                        <LogOutIcon />
+                      </div>
+                      <span>Sign Out</span>
+                    </motion.button>
+                  </div>
+                </DropdownContainer>
+              </div>
+
+              <motion.button
+                data-mobile-menu-button
+                className="md:hidden text-gray-600 hover:text-indigo-600 transition-colors duration-300 p-2 rounded-xl hover:bg-gray-100"
+                onClick={handleMobileMenuToggle}
+                whileTap={{ scale: 0.9 }}
+              >
+                {isMobileMenuOpen ? <XIcon /> : <MenuIcon />}
+              </motion.button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <MobileMenu
-        state={state}
-        actions={actions}
-        refs={refs}
-        menuItems={menuItems}
-        messages={messages}
-        notifications={notifications}
-        onLiveClick={handleLiveClick}
-      />
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            ref={refs.mobileMenuRef}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={ANIMATION_CONFIG.GENTLE}
+            className="md:hidden bg-white/95 backdrop-blur-xl shadow-2xl z-[9998] overflow-hidden border-t border-gray-200/50"
+          >
+            <div className="px-4 pt-4 pb-6 space-y-2">
+              {menuItems.map(item => {
+                const IconComponent = item.icon;
+                const isActive = activePage === item.id;
+
+                return (
+                  <motion.button
+                    key={item.id}
+                    className={cx(
+                      "flex items-center px-4 py-4 rounded-xl transition-all duration-300 w-full",
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 font-semibold shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    )}
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false);
+                      handleNavigation(item.id, e);
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className={cx(
+                      "p-2 mr-3 rounded-lg",
+                      isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                    )}>
+                      <IconComponent />
+                    </div>
+                    <span className="text-base font-medium">{item.label}</span>
+                  </motion.button>
+                );
+              })}
+
+              <div className="pt-2">
+                <LiveButton
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLiveClick();
+                  }}
+                  variant="mobile"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-gray-200/50 space-y-2">
+                <motion.button
+                  className="flex items-center w-full px-4 py-4 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleDropdownToggle(DROPDOWN_TYPES.MESSAGES);
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="p-2 mr-3 rounded-lg bg-blue-100 text-blue-600">
+                    <MailIcon />
+                  </div>
+                  <span className="text-base font-medium">Messages</span>
+                  <span className="ml-auto h-6 w-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                    {messages.filter(msg => msg.unread).length}
+                  </span>
+                </motion.button>
+
+                <motion.button
+                  className="flex items-center w-full px-4 py-4 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleDropdownToggle(DROPDOWN_TYPES.NOTIFICATIONS);
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="p-2 mr-3 rounded-lg bg-amber-100 text-amber-600">
+                    <BellIcon />
+                  </div>
+                  <span className="text-base font-medium">Notifications</span>
+                  <span className="ml-auto h-6 w-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                    {notifications.filter(notif => !notif.read).length}
+                  </span>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

@@ -155,9 +155,9 @@ const SocialLinks = ({ links }) => (
    ========================= */
 // Accepts { user } object. uses safe optional chaining.
 const UserProfile = ({ user }) => {
-  const displayName = user?.name || "User";
-  const initial = (user?.name && user.name.charAt(0).toUpperCase()) || "U";
-
+  const displayName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || "User";
+  const initial = (user?.first_name && user.first_name.charAt(0).toUpperCase()) || "U";
+  
   return (
     <div className="flex flex-col items-center p-4 pt-2 text-center border-b border-gray-100 bg-gradient-to-br from-white to-gray-50">
       <div className="relative mb-3">
@@ -194,7 +194,7 @@ const UserProfile = ({ user }) => {
 
       <div className="flex items-center gap-1 text-gray-500 text-sm mt-2" aria-label="Location">
         <FaMapMarkerAlt className="text-xs" aria-hidden="true" />
-        <span>New Delhi, India</span>
+        <span>{user?.location}</span>
       </div>
 
       <UserStats stats={USER_STATS} />

@@ -3,12 +3,13 @@ import { useForm } from '@inertiajs/react';
 
 const AuthModal = ({ mode, onClose, switchMode, content }) => {
   const { data, setData, post, processing, errors, reset } = useForm({
-    name: "",
+    first_name: "",
+    last_name: "",
     username: '',
     email: "",
     password: "",
     password_confirmation: "",
-    content: content , // Initialize with the content prop
+    content: content, // Initialize with the content prop
   });
 
   const [success, setSuccess] = useState("");
@@ -27,7 +28,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
     setSuccess("");
 
     const endpoint = mode === "login" ? "/login" : "/register";
-    console.log("login");
+    console.log("Submitting to:", endpoint);
     post(endpoint, {
       onSuccess: () => {
         setSuccess(
@@ -171,29 +172,57 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
 
           {mode === "register" && (
             <>
+              {/* First Name Field */}
               <div className="mb-4">
                 <label
-                  htmlFor="name"
+                  htmlFor="first_name"
                   className="block text-gray-700 text-sm font-medium mb-1"
                 >
-                  Full Name
+                  First Name
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={data.name}
+                  id="first_name"
+                  name="first_name"
+                  value={data.first_name}
                   onChange={handleChange}
                   className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                    errors.name ? "border-red-500" : "border-gray-300"
+                    errors.first_name ? "border-red-500" : "border-gray-300"
                   }`}
-                  placeholder="Enter your name"
+                  placeholder="Enter your first name"
+                  required
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                {errors.first_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
                 )}
               </div>
 
+              {/* Last Name Field */}
+              <div className="mb-4">
+                <label
+                  htmlFor="last_name"
+                  className="block text-gray-700 text-sm font-medium mb-1"
+                >
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  value={data.last_name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.last_name ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Enter your last name"
+                  required
+                />
+                {errors.last_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
+                )}
+              </div>
+
+              {/* Username Field */}
               <div className="mb-4">
                 <label
                   htmlFor="username"
@@ -211,6 +240,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
                     errors.username ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="Enter your username"
+                  required
                 />
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-600">{errors.username}</p>
@@ -219,15 +249,16 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
             </>
           )}
 
+          {/* Email Field - Show for both login and register */}
           <div className="mb-4">
             <label
               htmlFor="email"
               className="block text-gray-700 text-sm font-medium mb-2"
             >
-              Email or Username
+              {mode === "login" ? "Email or Username" : "Email"}
             </label>
             <input
-              type="text"
+              type={mode === "login" ? "text" : "email"}
               id="email"
               name="email"
               value={data.email}
@@ -235,7 +266,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
               className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="your.email@example.com or username"
+              placeholder={mode === "login" ? "your.email@example.com or username" : "your.email@example.com"}
               required
             />
             {errors.email && (
@@ -243,6 +274,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
             )}
           </div>
 
+          {/* Password Field */}
           <div className="mb-4">
             <label
               htmlFor="password"
@@ -267,6 +299,7 @@ const AuthModal = ({ mode, onClose, switchMode, content }) => {
             )}
           </div>
 
+          {/* Password Confirmation - Only for register */}
           {mode === "register" && (
             <div className="mb-2">
               <label

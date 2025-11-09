@@ -49,8 +49,15 @@ class SocialAuthController extends Controller
                 $counter++;
             }
 
+            // Split name into first and last name
+            $fullName = $socialUser->getName() ?? $socialUser->getNickname() ?? 'User';
+            $nameParts = explode(' ', $fullName, 2);
+            $firstName = $nameParts[0] ?? 'User';
+            $lastName = $nameParts[1] ?? '';
+
             $user = User::create([
-                'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
+                'first_name' => $firstName,
+                'last_name' => $lastName,
                 'username' => $username,
                 'email' => $socialUser->getEmail(),
                 'password' => bcrypt(Str::random(16)), // random password

@@ -2,132 +2,136 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): Response
+    public function index(User $user): JsonResponse
     {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
+        // Eager load relationships including Spatie roles
+        $user->load(['educations', 'experiences', 'roles']);
+
+        $profileData = $this->buildProfileData($user);
+   $profileData['is_owner'] = auth()->check() && auth()->id() === $user->id;
+        return response()->json($profileData);
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    private function buildProfileData($user): array
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit');
+        return [
+            'user' => $this->extractUserBasicInfo($user),
+            'profile' => $this->extractProfileInfo($user),
+            'professional' => $this->extractProfessionalInfo($user),
+            'network' => $this->buildNetworkInfo($user),
+            'content' => $this->buildContentInfo($user),
+            'reputation' => $this->buildReputationInfo($user),
+        ];
     }
 
-    /**
-     * Display the user's profile.
-     */
-    public function index(User $user): Response
+    private function extractUserBasicInfo($user): array
     {
-        return Inertia::render('Profile/Index', [
-            'user' => $user,
-            'discussionItems' => [
-                [
-                    'id' => 1,
-                    'title' => 'Optimizing React renders with memo',
-                    'tag' => 'Popular',
-                    'when' => '2d ago',
-                    'snippet' => 'Tips on profiling components and reducing unnecessary re-renders...',
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'Best practices for Tailwind theming',
-                    'tag' => 'Latest',
-                    'when' => '5h ago',
-                    'snippet' => 'A compact strategy for color tokens and dark mode...',
-                ],
-                [
-                    'id' => 3,
-                    'title' => 'Best practices for React theming',
-                    'tag' => 'Best',
-                    'when' => '10h ago',
-                    'snippet' => 'A compact strategy for color tokens and dark mode...',
-                ],
-            ],
-            'repStats' => [
-                ['label' => 'Upvotes', 'value' => 1280],
-                ['label' => 'Marks Accepted', 'value' => 214],
-                ['label' => 'Answers', 'value' => 356],
-                ['label' => 'Badges', 'value' => 18],
-            ],
-            'repDetails' => [
-                ['category' => 'React', 'count' => 620, 'last' => '2d ago'],
-                ['category' => 'Tailwind', 'count' => 280, 'last' => '5h ago'],
-                ['category' => 'JavaScript', 'count' => 380, 'last' => '1w ago'],
-                ['category' => 'Badges Earned', 'count' => 18, 'last' => '1d ago'],
-            ],
-            'activities' => [
-                ['id' => 1, 'icon' => '🧩', 'title' => 'Commented on Hooks vs Signals', 'when' => 'Yesterday'],
-                ['id' => 2, 'icon' => '✅', 'title' => 'Answer accepted in Debouncing inputs', 'when' => '2 days ago'],
-            ],
-            'comments' => [
-                [
-                    'id' => 1,
-                    'name' => 'Mark T.',
-                    'when' => '1h ago',
-                    'text' => 'Loved the memoization tip! It helped reduce our bundle size significantly.',
-                    'avatar' => 'https://i.pravatar.cc/72?img=7',
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Isha P.',
-                    'when' => '3h ago',
-                    'text' => 'Please share more on performance budgets. We\'re struggling with this in our current project.',
-                    'avatar' => 'https://i.pravatar.cc/72?img=14',
-                ],
-            ],
-            'social' => [
-                'LinkedIn' => 'https://linkedin.com/in/alexjohnson',
-                'GitHub' => 'https://github.com/alexj',
-                'Twitter' => 'https://twitter.com/alexdev',
-            ],
-        ]);
+        return [
+            'id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'full_name' => $user->getFullNameAttribute(),
+            'profile_picture' => $user->profile_picture ?? $this->getDefaultAvatar(),
+            'last_activity_at' => $user->last_activity_at,
+            'is_verified' => $user->is_verified,
+            'account_status' => $user->account_status,
+
+            // ✅ Spatie roles (simple list)
+            'roles' => $user->getRoleNames(), // e.g. ["admin", "writer"]
+        ];
     }
 
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
+    private function extractProfileInfo($user): array
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
+        return [
+            'title' => $user->title,
+            'bio' => $user->bio,
+            'about' => $user->about,
+            'location' => $user->location,
+            'website_url' => $user->website_url,
+            'phone' => $user->phone,
+            'date_of_birth' => $user->date_of_birth,
+            'gender' => $user->gender,
+            'account_type' => $user->account_type,
+            'profile_completeness' => $user->profile_completeness,
+            'social_links' => $user->getSocialLinksAttribute(),
+        ];
+    }
 
-        $user = $request->user();
+    private function extractProfessionalInfo($user): array
+    {
+        return [
+            'educations' => $user->educations->map(fn($education) => [
+                'id' => $education->id,
+                'institution' => $education->institution,
+                'degree' => $education->degree,
+                'specialization' => $education->specialization,
+                'start_year' => $education->start_year,
+                'end_year' => $education->end_year,
+            ]),
+            'experiences' => $user->experiences->map(fn($experience) => [
+                'id' => $experience->id,
+                'title' => $experience->title,
+                'company' => $experience->company,
+                'location' => $experience->location,
+                'start_date' => $experience->start_date,
+                'end_date' => $experience->end_date,
+            ]),
+        ];
+    }
 
-        Auth::logout();
+    private function buildNetworkInfo($user): array
+    {
+        return [
+            'followers' => $user->followers ?? 0,
+            'following' => $user->following ?? 0,
+            'connections' => $user->connections ?? 0,
+            'follower_breakdown' => [
+                'Engineering' => 50,
+                'Design' => 30,
+                'Product' => 20,
+            ],
+        ];
+    }
 
-        $user->delete();
+    private function buildContentInfo($user): array
+    {
+        return [
+            'about' => $user->about ?? 'No about information available.',
+            'experience' => $user->experience ?? 'No experience information available.',
+            'discussions' => [],
+            'activities' => [],
+            'comments' => [],
+            'badges' => [],
+        ];
+    }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    private function buildReputationInfo($user): array
+    {
+        return [
+            'stats' => [
+                ['label' => 'Posts', 'value' => 0],
+                ['label' => 'Likes', 'value' => 0],
+                ['label' => 'Comments', 'value' => 0],
+                ['label' => 'Followers', 'value' => $user->followers ?? 0],
+            ],
+            'details' => [
+                ['category' => 'Discussions', 'count' => 0, 'last' => 'Never'],
+                ['category' => 'Articles', 'count' => 0, 'last' => 'Never'],
+                ['category' => 'Comments', 'count' => 0, 'last' => 'Never'],
+            ],
+        ];
+    }
 
-        return Redirect::to('/');
+    private function getDefaultAvatar(): string
+    {
+        return 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=480&auto=format&fit=crop';
     }
 }

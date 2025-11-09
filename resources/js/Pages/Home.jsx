@@ -30,7 +30,7 @@ const LazyComponents = {
   JobsSection: lazy(() => import("@/Components/JobsSection")),
   MarketplaceSection: lazy(() => import("@/Components/MarketplaceSection")),
   LearningHub: lazy(() => import("@/Components/LearningHub")),
-  Profile: lazy(() => import("@/Components/Profile")),
+  Profile: lazy(() => import("@/Pages/Profile")),
   Dashboard: lazy(() => import("@/Components/Dashboard")),
   Settings: lazy(() => import("@/Components/Settings")),
   Messages: lazy(() => import("@/Components/Messages")),
@@ -537,99 +537,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-/**
- * Overlay Panel Component for notifications, messages, and profile
- * @function OverlayPanel
- * @param {Object} props - Component props
- * @param {boolean} props.isOpen - Whether panel is open
- * @param {Function} props.onClose - Close handler
- * @param {string} props.title - Panel title
- * @param {React.ReactNode} props.children - Panel content
- * @param {React.Ref} props.closeRef - Ref for close button
- * @param {string} [props.className="w-80"] - Additional CSS classes
- * @param {string} [props.top="top-[72px]"] - Top positioning
- * @param {string} [props.right="right-4"] - Right positioning
- * @param {string} [props.idSuffix=""] - ID suffix for accessibility
- * @param {string} [props.ariaLabel] - ARIA label for accessibility
- * @returns {React.Component} Overlay panel component
- */
-function OverlayPanel({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  closeRef, 
-  className = "w-80", 
-  top = "top-[72px]", 
-  right = "right-4", 
-  idSuffix = "",
-  ariaLabel 
-}) {
-  useEffect(() => {
-    if (isOpen && closeRef.current) {
-      closeRef.current.focus();
-    }
-  }, [isOpen, closeRef]);
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay Backdrop */}
-          <motion.div
-            key={`overlay-${title}-${idSuffix}`}
-            className="fixed inset-0 z-[1400] bg-transparent"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            aria-hidden="true"
-          />
-
-          {/* Panel Content */}
-          <motion.div
-            key={`panel-${title}-${idSuffix}`}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-            className={`fixed ${top} ${right} z-[1500] ${className} bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200`}
-            role="dialog"
-            aria-labelledby={`${title}-title-${idSuffix}`}
-            aria-label={ariaLabel || title}
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <FocusLock returnFocus>
-              {/* Panel Header */}
-              <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-                <h3 
-                  id={`${title}-title-${idSuffix}`} 
-                  className="text-sm font-semibold text-gray-900"
-                >
-                  {title}
-                </h3>
-                <button 
-                  ref={closeRef} 
-                  onClick={onClose} 
-                  className="text-gray-400 hover:text-gray-600 p-1 transition-colors rounded-md hover:bg-gray-100" 
-                  aria-label={`Close ${title}`}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              
-              {/* Panel Body */}
-              <div className="max-h-72 overflow-y-auto">
-                {children}
-              </div>
-            </FocusLock>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
 
 /**
  * Live Events Modal Component
@@ -772,15 +680,12 @@ export default function Home() {
   // ===========================================================================
   // COMPONENT STATE & REFS
   // ===========================================================================
-  
+
   const [rightMenuOpen, setRightMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
   // Refs for focus management
   const refs = {
-    notificationsClose: useRef(null),
-    messagesClose: useRef(null),
-    profileClose: useRef(null),
     liveClose: useRef(null),
     previousActive: useRef(null)
   };
@@ -791,21 +696,26 @@ export default function Home() {
 
   /**
    * Component mapping for dynamic page rendering
-   * @constant {Object} componentMap
+   * @constant {Function} componentMap
    */
-  const componentMap = useMemo(() => ({
-    dashboard: LazyComponents.Dashboard,
-    home: LazyComponents.Dashboard,
-    profile: LazyComponents.Profile,
-    settings: LazyComponents.Settings,
-    discussion: LazyComponents.Discussion,
-    jobs: LazyComponents.JobsSection,
-    marketplace: LazyComponents.MarketplaceSection,
-    learning: LazyComponents.LearningHub,
-    messages: LazyComponents.Messages,
-    notifications: LazyComponents.Notifications,
-    discoverGroups: LazyComponents.DiscoverGroups,
-  }), []);
+  const componentMap = useMemo(() => {
+    const map = {
+      dashboard: LazyComponents.Dashboard,
+      home: LazyComponents.Dashboard,
+      settings: LazyComponents.Settings,
+      discussion: LazyComponents.Discussion,
+      jobs: LazyComponents.JobsSection,
+      marketplace: LazyComponents.MarketplaceSection,
+      learning: LazyComponents.LearningHub,
+      messages: LazyComponents.Messages,
+      notifications: LazyComponents.Notifications,
+      discoverGroups: LazyComponents.DiscoverGroups,
+    };
+    return (name) => {
+      if (name.startsWith('profile/')) return LazyComponents.Profile;
+      return map[name] || LazyComponents.Dashboard;
+    };
+  }, []);
 
   /**
    * Categories based on active page
@@ -823,8 +733,8 @@ export default function Home() {
   }, [activePage.name]);
 
   // Get current active component
-  const ActiveComponent = componentMap[activePage.name] || LazyComponents.Dashboard;
-
+  const ActiveComponent = componentMap(activePage.name);
+  console.log("activePage.name", activePage.name);
   // ===========================================================================
   // SIDE EFFECTS
   // ===========================================================================
@@ -883,148 +793,13 @@ export default function Home() {
   // EVENT HANDLERS
   // ===========================================================================
 
-  /**
-   * Handle user sign out
-   * @function handleSignOut
-   */
-  const handleSignOut = useCallback(() => {
-    window.location.href = "/logout";
-  }, []);
+
 
   // ===========================================================================
   // RENDER FUNCTIONS
   // ===========================================================================
 
-  /**
-   * Render notifications panel content
-   * @function renderNotificationsPanel
-   * @returns {React.Component} Notifications panel JSX
-   */
-  const renderNotificationsPanel = () => (
-    <>
-      <div>
-        {getNotificationsList().map((notification) => (
-          <div 
-            key={notification.id} 
-            className={`px-4 py-3 hover:bg-gray-50 transition-colors ${
-              !notification.read ? "bg-blue-50 border-l-2 border-l-blue-500" : ""
-            }`}
-          >
-            <p className="text-sm text-gray-800">{notification.text}</p>
-            <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-            {!notification.read && (
-              <div className="mt-2">
-                <button 
-                  className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors font-medium" 
-                  onClick={() => markNotificationRead(notification.id)}
-                >
-                  Mark as read
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="px-4 py-3 border-t border-gray-200 text-center bg-gray-50">
-        <button 
-          className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors font-medium" 
-          onClick={() => navigateTo("notifications")}
-        >
-          View all notifications
-        </button>
-      </div>
-    </>
-  );
 
-  /**
-   * Render messages panel content
-   * @function renderMessagesPanel
-   * @returns {React.Component} Messages panel JSX
-   */
-  const renderMessagesPanel = () => (
-    <>
-      <div>
-        {getMessagesList().map((message) => (
-          <div 
-            key={message.id} 
-            className={`px-4 py-3 hover:bg-gray-50 transition-colors ${
-              message.unread ? "bg-blue-50 border-l-2 border-l-blue-500" : ""
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {message.name}
-                </p>
-                <p className="text-sm text-gray-700 truncate mt-1">
-                  {message.text}
-                </p>
-              </div>
-              <div className="text-xs text-gray-500 whitespace-nowrap ml-3">
-                {message.time}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="px-4 py-3 border-t border-gray-200 text-center bg-gray-50">
-        <button 
-          className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors font-medium" 
-          onClick={() => navigateTo("messages")}
-        >
-          View all messages
-        </button>
-      </div>
-    </>
-  );
-
-  /**
-   * Render profile panel content
-   * @function renderProfilePanel
-   * @returns {React.Component} Profile panel JSX
-   */
-  const renderProfilePanel = () => (
-    <>
-      <div className="px-4 py-3 border-b border-gray-200">
-        <p className="text-sm font-semibold text-gray-900 truncate">
-          {inertiaProps.auth?.user?.name || "User"}
-        </p>
-        <p className="text-xs text-gray-500 truncate mt-1">
-          {inertiaProps.auth?.user?.email || "user@example.com"}
-        </p>
-      </div>
-
-      <div className="divide-y divide-gray-100">
-        <button 
-          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center transition-colors"
-          onClick={() => navigateTo("profile", { userId: inertiaProps.auth?.user?.id })}
-        >
-          <span className="text-sm text-gray-800 font-medium">My Profile</span>
-        </button>
-        
-        <button 
-          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center transition-colors"
-          onClick={() => navigateTo("profile", { userId: MOCK_USERS.other.id })}
-        >
-          <span className="text-sm text-gray-800">View Sarah's Profile</span>
-        </button>
-        
-        <button 
-          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center transition-colors"
-          onClick={() => navigateTo("settings")}
-        >
-          <span className="text-sm text-gray-800">Settings</span>
-        </button>
-        
-        <button 
-          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center transition-colors text-red-600 hover:text-red-800"
-          onClick={handleSignOut}
-        >
-          <span className="text-sm font-medium">Sign out</span>
-        </button>
-      </div>
-    </>
-  );
 
   // ===========================================================================
   // MAIN COMPONENT RENDER
@@ -1123,12 +898,19 @@ export default function Home() {
               </button>
             </div>
           }>
+            {/*(console.log('activePage:', activePage.name, 'ActiveComp:', ActiveComponent))*/}
             <Suspense fallback={
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
               </div>
             }>
-              <ActiveComponent {...activePage.props} />
+              {activePage.name.startsWith('profile/') ? (
+                console.log('A'),
+                <ActiveComponent userId={parseInt(activePage.name.split('/')[1])} {...activePage.props} />
+              ) : (
+                  console.log('B'),
+                <ActiveComponent {...activePage.props} />
+              )}
             </Suspense>
           </ErrorBoundary>
         </div>
@@ -1166,40 +948,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Notifications Panel */}
-      <OverlayPanel 
-        isOpen={ui.openPanel === PANEL_TYPES.NOTIFICATIONS} 
-        onClose={() => dispatch({ type: "CLOSE_PANEL" })} 
-        title="Notifications" 
-        closeRef={refs.notificationsClose}
-        ariaLabel="Notifications panel"
-      >
-        {renderNotificationsPanel()}
-      </OverlayPanel>
 
-      {/* Messages Panel */}
-      <OverlayPanel 
-        isOpen={ui.openPanel === PANEL_TYPES.MESSAGES} 
-        onClose={() => dispatch({ type: "CLOSE_PANEL" })} 
-        title="Messages" 
-        closeRef={refs.messagesClose}
-        ariaLabel="Messages panel"
-      >
-        {renderMessagesPanel()}
-      </OverlayPanel>
-
-      {/* Profile Panel */}
-      <OverlayPanel 
-        isOpen={ui.openPanel === PANEL_TYPES.PROFILE} 
-        onClose={() => dispatch({ type: "CLOSE_PANEL" })} 
-        title="Account" 
-        closeRef={refs.profileClose} 
-        className="w-64" 
-        idSuffix="profile"
-        ariaLabel="Account menu"
-      >
-        {renderProfilePanel()}
-      </OverlayPanel>
 
       {/* Fullscreen Modals */}
       {activeModal && (

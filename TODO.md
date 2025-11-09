@@ -1,5 +1,8 @@
-# TODO: Implement redirection for logged-in users from root to /home
+# TODO: Create Reputation Categories Migration, Model, and Controller
 
-- [x] Modify the root '/' route in web.php to check authentication and redirect to '/home' if logged in
-- [x] Add necessary imports (Auth facade) to web.php
-- [ ] Test the redirection after login
+- [ ] Create migration for reputation_categories table with fields: id, name, description (nullable), timestamps
+- [ ] Create ReputationCategory model in app/Models/
+- [ ] Create ReputationCategoryController in app/Http/Controllers/ with CRUD methods (index, show, store, update, destroy)
+- [ ] Run the migration to create the table
+- [ ] Optionally add routes in routes/web.php for the controller
+- [ ] Test the controller endpoints

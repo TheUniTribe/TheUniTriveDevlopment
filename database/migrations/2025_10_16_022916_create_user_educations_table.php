@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('user_educations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('school');
+            $table->foreignId('user_id')->constrained();
+            $table->string('institution');
             $table->string('degree')->nullable();       // e.g., "BSc Computer Science"
-            $table->string('field_of_study')->nullable();
+            $table->string('specialization')->nullable();
             $table->year('start_year');
-            $table->year('end_year')->nullable();       // NULL = currently studying
-            $table->boolean('is_public')->default(true);
+            $table->year('end_year')->nullable();     
             $table->timestamps();
+            $table->index('user_id');
         });
     }
 
