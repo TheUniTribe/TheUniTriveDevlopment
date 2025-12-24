@@ -18,9 +18,14 @@ return new class extends Migration
             // Core authentication fields
             $table->string('username', 100)->unique();
             $table->string('email', 255)->unique();
+
+            // Social login fields
+            $table->string('provider')->nullable();
+            $table->string('provider_id')->nullable();
+
             $table->string('password', 255);
-            $table->boolean('is_active')->default(true);
-            $table->boolean('is_verified')->default(false);
+            $table->timestamp('is_active')->nullable();
+            $table->timestamp('is_verified')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             
             // Account security & recovery
@@ -31,7 +36,7 @@ return new class extends Migration
             
             // Account type and settings
             $table->string('account_type', 20)->default('basic');
-            $table->string('account_status')->default('active');
+            $table->string('account_status', 20)->default('active');
             $table->string('location', 50)->nullable();
             
             // Personal information
@@ -41,7 +46,8 @@ return new class extends Migration
             $table->date('date_of_birth')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'prefer_not_to_say'])->nullable();
             $table->string('phone', 20)->nullable();
-            
+
+
             // Profile content
             $table->string('profile_pic', 255)->nullable(); // Increased for full URLs
             $table->text('bio')->nullable();

@@ -54,7 +54,7 @@ class RegisterController extends Controller
             // Default values for other required fields
             'account_type' => 'free',
             'account_status' => 'active',
-            'is_verified' => false,
+            // 'is_verified' => false,
         ]);
 
         // Log the user in

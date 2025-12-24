@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'app_name' => env('APP_NAME', 'TheUniTribe'),
+            'csrf_token' => csrf_token(),
         ];
     }
 }

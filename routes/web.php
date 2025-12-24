@@ -1,125 +1,217 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\RegisterController;
-
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\RolePermissionController;
+
+/*
+|--------------------------------------------------------------------------
+| Controllers
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\{
+    ProfileController,
+    LoginController,
+    RegisterController,
+    Auth\SocialAuthController,
+    RolePermissionController,
+    CommunityController,
+    InterestController,
+    TopicController,
+    TagController,
+    UserController,
+    LocationController,
+    ForumController,
+    NetworkController,
+    BlogController,
+    ArticleController
+};
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (No Auth)
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect('/home');
-    }
-    return Inertia::render('Welcome');
+    return Auth::check()
+        ? redirect('/home')
+        : Inertia::render('Welcome');
 });
 
-Route::get('/run-seeder', function () {
-    // This will drop all tables, run all migrations, and then seed
-    Artisan::call('migrate:refresh', [
-        '--seed' => true,
-        '--seeder' => 'DatabaseSeeder', // optional, defaults to DatabaseSeeder
-    ]);
-
-    return response()->json([
-        'message' => 'Database migrated and seeded successfully!',
-        'output'  => Artisan::output(),
-    ]);
-})->name('run.seeder');
-
-Route::get('/download-credentials', function () {
-    $path = storage_path('app/seeded_users_credentials.csv');
-    if (file_exists($path)) {
-        return response()->download($path);
-    }
-    return response()->json(['error' => 'File not found'], 404);
-})->name('download.credentials');
-
-Route::get('/show-usernames', function () {
-    $usernames = \DB::table('users')->pluck('email')->toArray();
-    return response()->json(['usernames' => $usernames]);
-})->name('show.usernames');
-
-
-
-Route::post('/register', [RegisterController::class, 'registration'])->name('register');;
-Route::post('/login', [LoginController::class, 'login'])->name('login');;
+/* -------------------- AUTH -------------------- */
+Route::post('/register', [RegisterController::class, 'registration'])->name('register');
+Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/login/{provider}', [SocialAuthController::class, 'redirectToProvider'])
-    ->name('social.login');
+/* -------------------- SOCIAL LOGIN -------------------- */
+Route::get('/login/{provider}', [SocialAuthController::class, 'redirectToProvider']);
+Route::get('/login/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
 
-Route::get('/login/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
-    ->name('social.callback');
-    
-Route::get('/discussionforum', function () {
-    return Inertia::render('DiscussionForum'); // Your Inertia page component
-})->name('discussionforum');
+/*
+|--------------------------------------------------------------------------
+| PUBLIC DISCOVERY (Domain Correct)
+|--------------------------------------------------------------------------
+*/
 
-// Public profile show route (for JSON data)
-Route::get('/profiles/{user}', [ProfileController::class, 'index'])->name('profile.index');
+/* -------- Interests -------- */
+Route::get('/interests', [InterestController::class, 'index']);
+Route::get('/interests/{interest}/topics', [TopicController::class, 'byInterest']);
 
-// API route for profile data
+/* -------- Topics -------- */
+Route::get('/topics', [TopicController::class, 'index']);
+Route::get('/topics/{topic}/communities', [CommunityController::class, 'byTopic']);
+
+/* -------- Tags -------- */
+Route::get('/tags', [TagController::class, 'index']);
+Route::get('/tags/{tag}/communities', [CommunityController::class, 'byTag']);
+Route::get('/communities/{community}/tags', [CommunityController::class, 'tagsByCommunity']);
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC COMMUNITY ROUTES
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('communities')->group(function () {
+
+    Route::get('/', [CommunityController::class, 'index']);
+    Route::get('/published', [CommunityController::class, 'published']);
+    Route::get('/trending', [CommunityController::class, 'trending']);
+    Route::get('/featured', [CommunityController::class, 'featured']);
+    Route::get('/search', [CommunityController::class, 'search']);
+    Route::get('/leaderboard/top', [CommunityController::class, 'leaderboard']);
+
+    // MUST be last (slug-based public page)
+    Route::get('/{slug}', [CommunityController::class, 'show']);
+});
+
+/* -------------------- Profiles (Public) -------------------- */
+Route::get('/profiles/{user}', [ProfileController::class, 'index']);
+
+/* -------------------- Discussion Forum (Public) -------------------- */
+Route::get('/discussionforum', fn() => Inertia::render('DiscussionForum'));
+
+/*
+|--------------------------------------------------------------------------
+| DEV / UTILITY (PROTECT IN PROD)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/run-seeder', function () {
+    Artisan::call('migrate:fresh', ['--seed' => true]);
+
+    return response()->json([
+        'message' => 'Database reset & seeded',
+        'output'  => Artisan::output()
+    ]);
+});
+
+Route::get(
+    '/show-usernames',
+    fn() =>
+    response()->json(DB::table('users')->pluck('email'))
+);
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/home', function () {
-    return Inertia::render('Home', [
-        'content' => session('content', 'dashboard') // Default to 'home' if no content in session
-    ]);
-})->name('home');
-    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    /* -------------------- Dashboard -------------------- */
+    Route::get(
+        '/home',
+        fn() =>
+        Inertia::render('Home', ['content' => session('content', 'dashboard')])
+    )->name('home');
 
-    // Route::get('/profile/{user}', [ProfileController::class, 'editUser'])->name('profile.editUser');
+    /* -------------------- Profile -------------------- */
+    Route::prefix('profiles/{user}')->group(function () {
 
-    Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+        Route::post('/', [ProfileController::class, 'update']);
+        Route::patch('/', [ProfileController::class, 'update']);
+        Route::delete('/', [ProfileController::class, 'destroy']);
 
-    Route::post('/users/{user}/assign-role', [\App\Http\Controllers\UserController::class, 'assignRole'])->name('users.assignRole');
-    Route::post('/users/{user}/remove-role', [\App\Http\Controllers\UserController::class, 'removeRole'])->name('users.removeRole');
+        Route::post('/educations', [ProfileController::class, 'storeEducation']);
+        Route::put('/educations/{education}', [ProfileController::class, 'updateEducation']);
+        Route::delete('/educations/{education}', [ProfileController::class, 'destroyEducation']);
 
-    Route::get('/users/roles', [\App\Http\Controllers\UserController::class, 'getAllRoles'])->name('users.getAllRoles');
-    Route::get('/roles/{roleId}/permissions', [\App\Http\Controllers\UserController::class, 'getRolePermissions'])->name('roles.getPermissions');
-    Route::get('/rolePermissions', [RolePermissionController::class, 'index'])
-        ->name('rolePermissions');
+        Route::post('/experiences', [ProfileController::class, 'storeExperience']);
+        Route::put('/experiences/{experience}', [ProfileController::class, 'updateExperience']);
+        Route::delete('/experiences/{experience}', [ProfileController::class, 'destroyExperience']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHENTICATED COMMUNITY ACTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('communities')->group(function () {
+
+        /* -------- CRUD -------- */
+        Route::post('/', [CommunityController::class, 'store']);
+        Route::put('/{community}', [CommunityController::class, 'update']);
+        Route::patch('/{community}', [CommunityController::class, 'update']);
+        Route::delete('/{community}', [CommunityController::class, 'destroy']);
+
+        /* -------- Member Actions -------- */
+        Route::post('/{community}/join', [CommunityController::class, 'join']);
+        Route::post('/{community}/leave', [CommunityController::class, 'leave']);
+
+        /* -------- Workflow -------- */
+        Route::post('/{community}/submit', [CommunityController::class, 'submitForApproval']);
+        Route::post('/{community}/archive', [CommunityController::class, 'archive']);
+        Route::post('/{community}/unarchive', [CommunityController::class, 'unarchive']);
+
+        /* -------- Admin / Moderation -------- */
+        Route::post('/{community}/approve', [CommunityController::class, 'approve']);
+        Route::post('/{community}/reject', [CommunityController::class, 'reject']);
+        Route::post('/{community}/block', [CommunityController::class, 'block']);
+        Route::post('/{community}/unblock', [CommunityController::class, 'unblock']);
+        Route::post('/{community}/verify', [CommunityController::class, 'verify']);
+        Route::post('/{community}/unverify', [CommunityController::class, 'unverify']);
+        Route::post('/{community}/feature', [CommunityController::class, 'feature']);
+        Route::post('/{community}/unfeature', [CommunityController::class, 'unfeature']);
+    });
+
+    /* -------------------- Admin: Interests / Topics / Tags -------------------- */
+    Route::resource('interests', InterestController::class)->except(['index']);
+    Route::resource('topics', TopicController::class)->except(['index']);
+    Route::resource('tags', TagController::class)->except(['index']);
+
+    /* -------------------- Users / Roles -------------------- */
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/{user}/assign-role', [UserController::class, 'assignRole']);
+        Route::post('/{user}/remove-role', [UserController::class, 'removeRole']);
+        Route::get('/roles', [UserController::class, 'getAllRoles']);
+        Route::get('/roles/{role}/permissions', [UserController::class, 'getRolePermissions']);
+    });
+
+    /* -------------------- Role Permissions -------------------- */
     Route::prefix('role-permissions')->group(function () {
         Route::post('/permissions', [RolePermissionController::class, 'storePermission']);
         Route::post('/{role}/permissions', [RolePermissionController::class, 'assignPermission']);
         Route::delete('/{role}/permissions/{permission}', [RolePermissionController::class, 'revokePermission']);
     });
 
-    // Location API routes for cascading dropdowns
-    Route::get('/countries', [\App\Http\Controllers\LocationController::class, 'countries']);
-    Route::get('/regions', [\App\Http\Controllers\LocationController::class, 'regions']);
-    Route::get('/cities', [\App\Http\Controllers\LocationController::class, 'cities']);
-    Route::get('/pincodes', [\App\Http\Controllers\LocationController::class, 'pincodes']);
+    /* -------------------- Locations -------------------- */
+    Route::prefix('locations')->group(function () {
+        Route::get('/countries', [LocationController::class, 'countries']);
+        Route::get('/regions', [LocationController::class, 'regions']);
+        Route::get('/cities', [LocationController::class, 'cities']);
+        Route::get('/pincodes', [LocationController::class, 'pincodes']);
+    });
 
-    // Forum routes
-    Route::get('/forums', [\App\Http\Controllers\ForumController::class, 'index'])->name('forums.index');
-    Route::post('/forums', [\App\Http\Controllers\ForumController::class, 'store'])->name('forums.store');
-    Route::get('/forums/{id}', [\App\Http\Controllers\ForumController::class, 'show'])->name('forums.show');
-    Route::put('/forums/{id}', [\App\Http\Controllers\ForumController::class, 'update'])->name('forums.update');
-    Route::delete('/forums/{id}', [\App\Http\Controllers\ForumController::class, 'destroy'])->name('forums.destroy');
-
-    Route::resource('networks', \App\Http\Controllers\NetworkController::class);
-
-    // Blog routes
-    Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
-    Route::post('/blog', [\App\Http\Controllers\BlogController::class, 'store'])->name('blog.store');
-    Route::get('/blog/{id}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
-    Route::put('/blog/{id}', [\App\Http\Controllers\BlogController::class, 'update'])->name('blog.update');
-    Route::delete('/blog/{id}', [\App\Http\Controllers\BlogController::class, 'destroy'])->name('blog.destroy');
-
-    // Article routes
-    Route::get('/articles', [\App\Http\Controllers\ArticleController::class, 'index'])->name('articles.index');
-    Route::post('/articles', [\App\Http\Controllers\ArticleController::class, 'store'])->name('articles.store');
-    Route::get('/articles/{id}', [\App\Http\Controllers\ArticleController::class, 'show'])->name('articles.show');
-    Route::put('/articles/{id}', [\App\Http\Controllers\ArticleController::class, 'update'])->name('articles.update');
-    Route::delete('/articles/{id}', [\App\Http\Controllers\ArticleController::class, 'destroy'])->name('articles.destroy');
-
-    // Discussion Forum route - using /discussionforum outside auth middleware
-    // The /discussionforum route is already defined above for all users
+    /* -------------------- Content -------------------- */
+    Route::resource('forums', ForumController::class);
+    Route::resource('blog', BlogController::class);
+    Route::resource('articles', ArticleController::class);
+    Route::resource('networks', NetworkController::class);
 });

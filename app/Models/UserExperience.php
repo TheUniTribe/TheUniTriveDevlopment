@@ -19,6 +19,7 @@ class UserExperience extends Model
         'location',
         'start_date',
         'end_date',
+        'description',
     ];
 
     protected $casts = [

@@ -23,29 +23,44 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
+        // Core authentication fields
         'username',
         'email',
+        'provider',
+        'provider_id',
         'password',
-        'profile_picture',
+
+        // Social login fields
+        'is_active',
+        'is_verified',
+        'email_verified_at',
+
+        // Account security & recovery
+        'password_reset_token',
+        'password_reset_expires',
+        'two_factor_secret',
+        'two_factor_enabled',
+
+        // Account type and settings
+        'account_type',
+        'account_status',
+        'location',
+
+        // Personal information
         'first_name',
         'last_name',
         'title',
+        'date_of_birth',
+        'gender',
+        'phone',
+
+        // Profile content
+        'profile_pic',
         'bio',
         'about',
         'website_url',
-        'phone',
-        'date_of_birth',
-        'gender',
-        'location',
-        'account_type',
-        'account_status',
-        'is_verified',
-        'two_factor_enabled',
-        'two_factor_secret',
-        'password_reset_token',
-        'password_reset_expires',
-        'last_activity_at',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -204,8 +219,8 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getCurrentEducationAttribute()
     {
         return $this->educations()
-            ->whereNull('end_year')
-            ->orderBy('start_year', 'desc')
+            ->whereNull('end_date')
+            ->orderBy('start_date', 'desc')
             ->first();
     }
 
@@ -260,13 +275,14 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getSocialLinksAttribute(): array
     {
-        return $this->links->mapWithKeys(function ($link) {
-            return [$link->platform => [
+        return $this->links->map(function ($link) {
+            return [
+                'platform' => $link->platform,
                 'url' => $link->url,
                 'label' => $link->display_label,
                 'icon' => $link->platform_icon,
                 'is_public' => $link->is_public,
-            ]];
+            ];
         })->toArray();
     }
 

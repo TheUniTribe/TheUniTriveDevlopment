@@ -16,6 +16,7 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.{jsx,tsx}')
         ),
     setup({ el, App, props }) {
+        window.csrf_token = props.csrf_token;
         const root = createRoot(el);
         root.render(
             <App {...props} />

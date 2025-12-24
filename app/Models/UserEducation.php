@@ -17,13 +17,13 @@ class UserEducation extends Model
         'institution',
         'degree',
         'specialization',
-        'start_year',
-        'end_year',
+        'start_date',
+        'end_date',
     ];
 
     protected $casts = [
-        'start_year' => 'integer',
-        'end_year' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function user(): BelongsTo

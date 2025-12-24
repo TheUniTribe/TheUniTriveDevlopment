@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Inertia\Inertia;
@@ -37,7 +38,7 @@ class LoginController extends Controller
             \Log::info('Login successful', [
                 'email' => $request->email,
                 'new_session_id' => $request->session()->getId(),
-                'user_id' => Auth::id(),
+                'user_id' => (int) Auth::id(),
             ]);
             // Set default content to 'home' if not provided
             $request->session()->put('content', $request->content ?? 'dashboard');

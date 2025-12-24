@@ -4,7 +4,7 @@ import { PostCard } from "@/Components/PostCard";
 import { AdCard } from "@/Components/AdCard";
 import { QuestionForm } from "@/Components/QuestionForm";
 import { TrendingTopics } from "@/Components/TrendingTopics";
-import { FilterBar } from "@/Components/FilterBar";
+import FilterBar from "@/Components/FilterBar";
 import { PenSquare, Search, Filter, TrendingUp, Clock, Zap } from "lucide-react";
 import { Button } from "@/Components/ui/Button";
 import { Input } from "@/Components/ui/Input";

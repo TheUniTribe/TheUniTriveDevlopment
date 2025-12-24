@@ -14,8 +14,8 @@ return new class extends Migration
             $table->string('institution');
             $table->string('degree')->nullable();       // e.g., "BSc Computer Science"
             $table->string('specialization')->nullable();
-            $table->year('start_year');
-            $table->year('end_year')->nullable();     
+            $table->date('start_year');
+            $table->date('end_year')->nullable();
             $table->timestamps();
             $table->index('user_id');
         });

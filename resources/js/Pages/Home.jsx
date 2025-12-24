@@ -35,9 +35,11 @@ const LazyComponents = {
   Settings: lazy(() => import("@/Components/Settings")),
   Messages: lazy(() => import("@/Components/Messages")),
   Notifications: lazy(() => import("@/Components/Notifications")),
-  DiscoverGroups: lazy(() => import("@/Components/DiscoverGroups")),
+  DiscoverCommunities: lazy(() => import("@/Components/DiscoverCommunities")),
   Articles: lazy(() => import("@/Pages/Articles")),
-  Question: lazy(() => import("@/Components/Question"))
+  Question: lazy(() => import("@/Components/Question")),
+
+  CommunityDashboard: lazy(() => import("@/Components/ui/CommunityDashboard"))
 };
 
 // =============================================================================
@@ -709,7 +711,7 @@ export default function Home() {
       learning: LazyComponents.LearningHub,
       messages: LazyComponents.Messages,
       notifications: LazyComponents.Notifications,
-      discoverGroups: LazyComponents.DiscoverGroups,
+      // DiscoverCommunities: LazyComponents.DiscoverCommunities,
     };
     return (name) => {
       if (name.startsWith('profile/')) return LazyComponents.Profile;
@@ -874,6 +876,7 @@ export default function Home() {
               }>
                 <LazyComponents.RightSidebar 
                   activePage={activePage.name} 
+                  setActiveModal={setActiveModal}
                   rightMenuOpen={rightMenuOpen} 
                   setRightMenuOpen={setRightMenuOpen} 
                 />
@@ -975,6 +978,8 @@ export default function Home() {
                 {activeModal === "articles" && <LazyComponents.Articles />}
                 {activeModal === "questions" && <LazyComponents.Question />}
                 {activeModal === "discussions" && <LazyComponents.Discussion />}
+                {activeModal === "community" && <LazyComponents.DiscoverCommunities />}
+                {activeModal === "community-dashboard" && <LazyComponents.CommunityDashboard />}
               </Suspense>
             </ErrorBoundary>
           </div>
